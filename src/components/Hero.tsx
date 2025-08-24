@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight, Zap, Eye, Layers, Play, BookOpen } from 'lucide-react';
+import ProtectedLink from './ProtectedLink';
 
 const Hero: React.FC = () => {
   const [animatedTiles, setAnimatedTiles] = React.useState<number[]>([]);
@@ -40,18 +41,21 @@ const Hero: React.FC = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <a 
+              <ProtectedLink
                 href="#ai-sandbox"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all hover:scale-105 hover:-translate-y-1 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
               >
                 <BookOpen className="h-5 w-5" />
                 <span>Start Learning</span>
-              </a>
+              </ProtectedLink>
               
-              <button className="border-2 border-gray-200 hover:border-gray-300 text-gray-700 px-8 py-4 rounded-xl font-semibold text-lg transition-all hover:bg-gray-50 hover:-translate-y-1 flex items-center justify-center space-x-2">
+              <ProtectedLink 
+                href="/demo"
+                className="border-2 border-gray-200 hover:border-gray-300 text-gray-700 px-8 py-4 rounded-xl font-semibold text-lg transition-all hover:bg-gray-50 hover:-translate-y-1 flex items-center justify-center space-x-2"
+              >
                 <Play className="h-5 w-5" />
-                Watch Demo
-              </button>
+                <span>Watch Demo</span>
+              </ProtectedLink>
             </div>
             
             <div className="grid grid-cols-3 gap-8 pt-8">

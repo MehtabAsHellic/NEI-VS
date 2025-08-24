@@ -14,7 +14,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
-import ProtectedRoute from './auth/ProtectedRoute';
+import ProtectedLink from './ProtectedLink';
 
 const Dashboard: React.FC = () => {
   const { user, signOut } = useAuthStore();
@@ -80,7 +80,6 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow-sm border-b border-gray-200">
@@ -161,16 +160,18 @@ const Dashboard: React.FC = () => {
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {quickActions.map((action, index) => (
-                    <motion.a
+                    <ProtectedLink
                       key={action.title}
-                      href={action.href.startsWith('#') ? `/${action.href}` : action.href}
-                      className="group relative bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200"
-                      whileHover={{ y: -2, scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
+                      href={action.href}
+                      className="group relative bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 block"
                     >
+                      <motion.div
+                        whileHover={{ y: -2, scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
+                      >
                       {action.badge && (
                         <div className="absolute top-4 right-4">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -195,7 +196,8 @@ const Dashboard: React.FC = () => {
                         </div>
                         <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-indigo-600 transition-colors" />
                       </div>
-                    </motion.a>
+                      </motion.div>
+                    </ProtectedLink>
                   ))}
                 </div>
               </motion.div>
@@ -264,20 +266,23 @@ const Dashboard: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <motion.a
+              <ProtectedLink
                 href="#ai-sandbox"
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
-                <Play className="h-4 w-4" />
-                <span>Try Now</span>
-              </motion.a>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center space-x-2"
+                >
+                  <Play className="h-4 w-4" />
+                  <span>Try Now</span>
+                </motion.div>
+              </ProtectedLink>
             </div>
           </motion.div>
         </div>
       </div>
-    </ProtectedRoute>
   );
 };
 

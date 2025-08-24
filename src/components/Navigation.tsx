@@ -1,6 +1,7 @@
 import React from 'react';
 import { Brain, BookOpen, Gamepad2, Layers, Users, FileText, Play, Menu, X, User, LogOut } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
+import ProtectedLink from './ProtectedLink';
 
 const Navigation: React.FC = () => {
   const { isAuthenticated, user, signOut } = useAuthStore();
@@ -10,7 +11,6 @@ const Navigation: React.FC = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      window.location.href = '/';
     } catch (error) {
       console.error('Sign out failed:', error);
     }
@@ -63,48 +63,49 @@ const Navigation: React.FC = () => {
             >
               Home
             </button>
-            <button 
-              onClick={() => scrollToSection('learn')}
+            <ProtectedLink
+              href="#learn"
               className={`flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors font-medium ${
                 activeSection === 'learn' ? 'text-blue-600' : ''
               }`}
+              requireAuth={false}
             >
               <BookOpen className="h-4 w-4" />
               <span>Learn</span>
-            </button>
-            <button 
-              onClick={() => scrollToSection('ai-sandbox')}
+            </ProtectedLink>
+            <ProtectedLink
+              href="#ai-sandbox"
               className={`flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors font-medium ${
                 activeSection === 'ai-sandbox' ? 'text-blue-600' : ''
               }`}
             >
               <Gamepad2 className="h-4 w-4" />
               <span>Sandbox</span>
-            </button>
-            <button className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors font-medium">
+            </ProtectedLink>
+            <ProtectedLink href="/models" className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors font-medium">
               <Layers className="h-4 w-4" />
               <span>Models</span>
-            </button>
-            <button className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors font-medium">
+            </ProtectedLink>
+            <ProtectedLink href="/educators" className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors font-medium">
               <Users className="h-4 w-4" />
               <span>Educators</span>
-            </button>
-            <button className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors font-medium">
+            </ProtectedLink>
+            <ProtectedLink href="/docs" className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors font-medium">
               <FileText className="h-4 w-4" />
               <span>Docs</span>
-            </button>
+            </ProtectedLink>
           </div>
           
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <div className="hidden md:flex items-center space-x-4">
-                <a
+                <ProtectedLink
                   href="/#dashboard"
                   className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
                 >
                   <User className="h-4 w-4" />
                   <span>Dashboard</span>
-                </a>
+                </ProtectedLink>
                 <button
                   onClick={handleSignOut}
                   className="flex items-center space-x-2 text-gray-700 hover:text-red-600 transition-colors font-medium"
@@ -122,10 +123,13 @@ const Navigation: React.FC = () => {
                 <span>Sign In</span>
               </button>
             )}
-            <button className="hidden md:flex bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 items-center space-x-2">
+            <ProtectedLink 
+              href="/demo"
+              className="hidden md:flex bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 items-center space-x-2"
+            >
               <Play className="h-4 w-4" />
               <span>Get Demo</span>
-            </button>
+            </ProtectedLink>
             
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -145,36 +149,37 @@ const Navigation: React.FC = () => {
             >
               Home
             </button>
-            <button 
-              onClick={() => scrollToSection('learn')}
+            <ProtectedLink
+              href="#learn"
               className="block w-full text-left px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors"
+              requireAuth={false}
             >
               Learn
-            </button>
-            <button 
-              onClick={() => scrollToSection('ai-sandbox')}
+            </ProtectedLink>
+            <ProtectedLink
+              href="#ai-sandbox"
               className="block w-full text-left px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors"
             >
               Sandbox
-            </button>
-            <button className="block w-full text-left px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors">
+            </ProtectedLink>
+            <ProtectedLink href="/models" className="block w-full text-left px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors">
               Models
-            </button>
-            <button className="block w-full text-left px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors">
+            </ProtectedLink>
+            <ProtectedLink href="/educators" className="block w-full text-left px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors">
               Educators
-            </button>
-            <button className="block w-full text-left px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors">
+            </ProtectedLink>
+            <ProtectedLink href="/docs" className="block w-full text-left px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors">
               Docs
-            </button>
+            </ProtectedLink>
             
             {isAuthenticated ? (
               <>
-                <a
+                <ProtectedLink
                   href="/#dashboard"
                   className="block w-full text-left px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors"
                 >
                   Dashboard
-                </a>
+                </ProtectedLink>
                 <button
                   onClick={handleSignOut}
                   className="block w-full text-left px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-gray-50 rounded-lg transition-colors"
@@ -194,10 +199,13 @@ const Navigation: React.FC = () => {
               </div>
             )}
             <div className="px-4 pt-2">
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2">
+              <ProtectedLink 
+                href="/demo"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
+              >
                 <Play className="h-4 w-4" />
                 <span>Get Demo</span>
-              </button>
+              </ProtectedLink>
             </div>
           </div>
         )}
