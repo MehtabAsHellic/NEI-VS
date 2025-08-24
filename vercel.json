@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/dashboard",
-      "destination": "/#dashboard"
+      "destination": "/index.html"
     },
     {
       "source": "/(.*)",

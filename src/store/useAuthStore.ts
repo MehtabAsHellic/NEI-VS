@@ -57,13 +57,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true });
       const user = await authService.getCurrentUser();
-      set({ user, isAuthenticated: !!user });
       
-      // Handle post-authentication routing
-      if (user && window.location.pathname === '/dashboard') {
-        window.history.replaceState(null, '', '/#dashboard');
+      if (user) {
+        set({ user, isAuthenticated: true });
+        
+        // Handle post-authentication routing
+        const currentPath = window.location.pathname;
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirect = urlParams.get('redirect');
+        
+        // If user just completed OAuth and should go to dashboard
+        if (currentPath === '/dashboard' || redirect === 'dashboard') {
+          // Clean URL and set hash
+          const newUrl = window.location.origin + '/#dashboard';
+          window.history.replaceState(null, '', newUrl);
+        }
+      } else {
+        set({ user: null, isAuthenticated: false });
       }
     } catch (error) {
+      console.error('Auth check error:', error);
       set({ user: null, isAuthenticated: false });
     } finally {
       set({ isLoading: false });

@@ -13,10 +13,12 @@ export const authService = {
   // Create Google OAuth2 session
   async signInWithGoogle() {
     try {
+      // Use the current domain for redirect URLs
+      const baseUrl = window.location.origin;
       await account.createOAuth2Session(
         'google',
-        'https://neivs.vercel.app/?redirect=dashboard',
-        'https://neivs.vercel.app/'
+        `${baseUrl}/?redirect=dashboard`, // Success URL
+        `${baseUrl}/` // Failure URL
       );
     } catch (error) {
       console.error('Google sign-in error:', error);
@@ -29,6 +31,7 @@ export const authService = {
     try {
       return await account.get();
     } catch (error) {
+      // Don't log this as an error since it's expected when not authenticated
       return null;
     }
   },
@@ -37,6 +40,9 @@ export const authService = {
   async signOut() {
     try {
       await account.deleteSession('current');
+      // Clear any stored state and redirect to home
+      window.history.replaceState(null, '', '/');
+      window.location.reload();
     } catch (error) {
       console.error('Sign out error:', error);
       throw error;

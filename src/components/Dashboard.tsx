@@ -18,11 +18,15 @@ import ProtectedRoute from './auth/ProtectedRoute';
 
 const Dashboard: React.FC = () => {
   const { user, signOut } = useAuthStore();
+  
+  // Debug logging to help troubleshoot
+  React.useEffect(() => {
+    console.log('Dashboard mounted, user:', user);
+  }, [user]);
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      window.location.href = '/';
     } catch (error) {
       console.error('Sign out failed:', error);
     }

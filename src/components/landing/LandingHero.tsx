@@ -20,9 +20,12 @@ const LandingHero: React.FC = () => {
 
   const handleSignIn = async () => {
     try {
+      console.log('Starting Google Sign-In...');
       await signInWithGoogle();
     } catch (error) {
       console.error('Sign in failed:', error);
+      // Show user-friendly error message
+      alert('Sign in failed. Please try again.');
     }
   };
 
