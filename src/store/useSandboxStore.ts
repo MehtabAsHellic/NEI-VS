@@ -68,7 +68,24 @@ export const useSandboxStore = create<SandboxState>((set) => ({
   setIsProcessing: (isProcessing) => set({ isProcessing }),
   setCurrentStep: (step) => set({ currentStep: step }),
   setProcessingPhase: (phase) => set({ processingPhase: phase }),
-  setResponse: (response) => set({ response }),
+  setResponse: (response) => {
+    set({ response });
+    // Update user stats when response is received
+    if (response && typeof window !== 'undefined') {
+      const userEmail = JSON.parse(localStorage.getItem('auth-storage') || '{}')?.state?.user?.email;
+      if (userEmail) {
+        const statsKey = `neivs-stats-${userEmail}`;
+        const currentStats = JSON.parse(localStorage.getItem(statsKey) || '{}');
+        const updatedStats = {
+          ...currentStats,
+          sandboxSessions: (currentStats.sandboxSessions || 0) + 1,
+          totalPrompts: (currentStats.totalPrompts || 0) + 1,
+          lastActivity: new Date().toISOString()
+        };
+        localStorage.setItem(statsKey, JSON.stringify(updatedStats));
+      }
+    }
+  },
   setTransformerResults: (results) => set({ transformerResults: results }),
   setError: (error) => set({ error }),
   setShowExplanations: (show) => set({ showExplanations: show }),

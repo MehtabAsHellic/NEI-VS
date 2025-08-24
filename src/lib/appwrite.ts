@@ -14,7 +14,7 @@ export const authService = {
   async signInWithGoogle() {
     try {
       // Clean redirect URLs without hash
-      const baseUrl = 'https://neivs.vercel.app';
+      const baseUrl = window.location.origin;
       const successUrl = `${baseUrl}/dashboard`;
       const failureUrl = baseUrl;
       

@@ -37,9 +37,23 @@ const ProtectedLink: React.FC<ProtectedLinkProps> = ({
       // Handle hash navigation
       e.preventDefault();
       const targetId = href.substring(1);
-      const element = document.getElementById(targetId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+      
+      // Special handling for ai-sandbox
+      if (targetId === 'ai-sandbox') {
+        // Navigate to the main app view and then scroll to sandbox
+        window.location.hash = targetId;
+        // Small delay to ensure the view has changed
+        setTimeout(() => {
+          const element = document.getElementById(targetId);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      } else {
+        const element = document.getElementById(targetId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
       }
     } else if (href.startsWith('/')) {
       // Handle internal navigation

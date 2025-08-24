@@ -45,9 +45,8 @@ export const useAuthStore = create<AuthState>()(
       await authService.signInWithGoogle();
     } catch (error) {
       console.error('Sign in failed:', error);
-      throw error;
-    } finally {
       set({ isLoading: false });
+      throw error;
     }
   },
 
