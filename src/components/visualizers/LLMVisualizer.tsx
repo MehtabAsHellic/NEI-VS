@@ -1,7 +1,11 @@
 import React from 'react';
-import { Eye, Layers, BarChart3 } from 'lucide-react';
+import { Eye, Layers, BarChart3, ExternalLink } from 'lucide-react';
 
-const LLMVisualizer: React.FC = () => {
+interface LLMVisualizerProps {
+  onOpenSandbox?: () => void;
+}
+
+const LLMVisualizer: React.FC<LLMVisualizerProps> = ({ onOpenSandbox }) => {
   const [activeView, setActiveView] = React.useState('attention');
   
   const tokens = ['The', 'quick', 'brown', 'fox', 'jumps', 'over', 'the', 'lazy', 'dog'];
@@ -42,6 +46,27 @@ const LLMVisualizer: React.FC = () => {
       </div>
 
       <div className="flex-1">
+        {/* Interactive Sandbox Link */}
+        {onOpenSandbox && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium text-blue-900">Interactive LLM Sandbox</h4>
+                <p className="text-sm text-blue-700 mt-1">
+                  Run your own text through a real transformer with live visualizations
+                </p>
+              </div>
+              <button
+                onClick={onOpenSandbox}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+              >
+                <span>Open Sandbox</span>
+                <ExternalLink className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {activeView === 'attention' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">

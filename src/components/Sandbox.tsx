@@ -3,7 +3,11 @@ import ModelSelector from './ModelSelector';
 import ControlPanel from './ControlPanel';
 import VisualizationPanel from './visualizers/VisualizationPanel';
 
-const Sandbox: React.FC = () => {
+interface SandboxProps {
+  onOpenLLMSandbox?: () => void;
+}
+
+const Sandbox: React.FC<SandboxProps> = ({ onOpenLLMSandbox }) => {
   const [selectedModel, setSelectedModel] = React.useState('llm');
   const [isPlaying, setIsPlaying] = React.useState(false);
 
@@ -44,7 +48,10 @@ const Sandbox: React.FC = () => {
 
           {/* Right Column - Visualization */}
           <div className="lg:col-span-2">
-            <VisualizationPanel selectedModel={selectedModel} />
+            <VisualizationPanel 
+              selectedModel={selectedModel} 
+              onOpenLLMSandbox={onOpenLLMSandbox}
+            />
           </div>
         </div>
       </div>

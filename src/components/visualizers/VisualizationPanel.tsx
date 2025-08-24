@@ -5,13 +5,14 @@ import { BarChart3, TrendingUp, Activity } from 'lucide-react';
 
 interface VisualizationPanelProps {
   selectedModel: string;
+  onOpenLLMSandbox?: () => void;
 }
 
-const VisualizationPanel: React.FC<VisualizationPanelProps> = ({ selectedModel }) => {
+const VisualizationPanel: React.FC<VisualizationPanelProps> = ({ selectedModel, onOpenLLMSandbox }) => {
   const renderVisualizer = () => {
     switch (selectedModel) {
       case 'llm':
-        return <LLMVisualizer />;
+        return <LLMVisualizer onOpenSandbox={onOpenLLMSandbox} />;
       case 'cnn':
         return <CNNVisualizer />;
       case 'rnn':
