@@ -1,11 +1,80 @@
 import React from 'react';
+import { useAuthStore } from './store/useAuthStore';
+import LandingPage from './components/LandingPage';
+import Dashboard from './components/Dashboard';
 import Navigation from './components/Navigation';
 import Hero from './components/Hero';
 import WhyNEIVS from './components/WhyNEIVS';
 import AISandbox from './components/AISandbox';
 import Learn from './components/Learn';
+import { Loader } from 'lucide-react';
 
 function App() {
+  const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const [showLanding, setShowLanding] = React.useState(true);
+  const [currentView, setCurrentView] = React.useState<'landing' | 'dashboard' | 'main'>('landing');
+
+  React.useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  React.useEffect(() => {
+    // Check URL hash to determine view
+    const hash = window.location.hash;
+    if (hash === '#dashboard' && isAuthenticated) {
+      setCurrentView('dashboard');
+      setShowLanding(false);
+    } else if (hash && hash !== '#dashboard') {
+      setCurrentView('main');
+      setShowLanding(false);
+    } else if (!isAuthenticated) {
+      setCurrentView('landing');
+      setShowLanding(true);
+    }
+  }, [isAuthenticated]);
+
+  // Handle hash changes
+  React.useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === '#dashboard' && isAuthenticated) {
+        setCurrentView('dashboard');
+        setShowLanding(false);
+      } else if (hash && hash !== '#dashboard') {
+        setCurrentView('main');
+        setShowLanding(false);
+      } else if (!hash && !isAuthenticated) {
+        setCurrentView('landing');
+        setShowLanding(true);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [isAuthenticated]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader className="h-8 w-8 animate-spin mx-auto mb-4 text-indigo-600" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show landing page for unauthenticated users or when explicitly requested
+  if (showLanding && currentView === 'landing') {
+    return <LandingPage />;
+  }
+
+  // Show dashboard for authenticated users when requested
+  if (currentView === 'dashboard' && isAuthenticated) {
+    return <Dashboard />;
+  }
+
+  // Show main app (original NEI-VS interface)
   return (
     <div className="min-h-screen bg-white">
       <Navigation />

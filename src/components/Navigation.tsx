@@ -1,9 +1,20 @@
 import React from 'react';
-import { Brain, BookOpen, Gamepad2, Layers, Users, FileText, Play, Menu, X } from 'lucide-react';
+import { Brain, BookOpen, Gamepad2, Layers, Users, FileText, Play, Menu, X, User, LogOut } from 'lucide-react';
+import { useAuthStore } from '../store/useAuthStore';
 
 const Navigation: React.FC = () => {
+  const { isAuthenticated, user, signOut } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState('');
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Sign out failed:', error);
+    }
+  };
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -85,6 +96,32 @@ const Navigation: React.FC = () => {
           </div>
           
           <div className="flex items-center space-x-4">
+            {isAuthenticated ? (
+              <div className="hidden md:flex items-center space-x-4">
+                <a
+                  href="#dashboard"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                >
+                  <User className="h-4 w-4" />
+                  <span>Dashboard</span>
+                </a>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-2 text-gray-700 hover:text-red-600 transition-colors font-medium"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => window.location.href = '/'}
+                className="hidden md:flex bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 items-center space-x-2"
+              >
+                <Play className="h-4 w-4" />
+                <span>Sign In</span>
+              </button>
+            )}
             <button className="hidden md:flex bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 items-center space-x-2">
               <Play className="h-4 w-4" />
               <span>Get Demo</span>
@@ -129,6 +166,33 @@ const Navigation: React.FC = () => {
             <button className="block w-full text-left px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors">
               Docs
             </button>
+            
+            {isAuthenticated ? (
+              <>
+                <a
+                  href="#dashboard"
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  Dashboard
+                </a>
+                <button
+                  onClick={handleSignOut}
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <div className="px-4 pt-2">
+                <button
+                  onClick={() => window.location.href = '/'}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Play className="h-4 w-4" />
+                  <span>Sign In</span>
+                </button>
+              </div>
+            )}
             <div className="px-4 pt-2">
               <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2">
                 <Play className="h-4 w-4" />
