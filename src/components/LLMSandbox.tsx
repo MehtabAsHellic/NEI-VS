@@ -4,7 +4,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, TrendingUp, BarChart3, Eye, Layers, Target, GitBranch } from 'lucide-react';
+import { Activity, TrendingUp, BarChart3, Eye, Layers, Target, GitBranch, Sparkles, Zap, Info } from 'lucide-react';
 import { useLLMStore } from '../store/useLLMStore';
 import Controls from './Controls';
 import Heatmap from './Heatmap';
@@ -46,6 +46,7 @@ const LLMSandbox: React.FC = () => {
   const [hoveredToken, setHoveredToken] = React.useState<number | null>(null);
   const [showOnboarding, setShowOnboarding] = React.useState(false);
   const [isFirstRun, setIsFirstRun] = React.useState(true);
+  const [showExplanation, setShowExplanation] = React.useState(false);
 
   // Initialize worker
   useEffect(() => {
@@ -176,13 +177,73 @@ const LLMSandbox: React.FC = () => {
 
   const currentAttention = artifacts?.attnByLayerHead[layerView]?.[headView] || [];
 
+  const tabConfig = [
+    { 
+      id: 'attention', 
+      label: 'Attention', 
+      icon: Eye, 
+      description: 'See how tokens attend to each other',
+      color: 'blue'
+    },
+    { 
+      id: 'embeddings', 
+      label: 'Embeddings', 
+      icon: Layers, 
+      description: '768D vectors projected to 2D space',
+      color: 'purple'
+    },
+    { 
+      id: 'probabilities', 
+      label: 'Probabilities', 
+      icon: BarChart3, 
+      description: 'Next token prediction confidence',
+      color: 'green'
+    },
+    { 
+      id: 'tokens', 
+      label: 'Token Trace', 
+      icon: GitBranch, 
+      description: 'Step-by-step token processing',
+      color: 'orange'
+    },
+  ];
+
   return (
     <motion.div 
-      className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-8"
+      className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50/30 to-purple-50 py-8 relative overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     >
+      {/* Background Neural Network Pattern */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none">
+        <svg className="w-full h-full" viewBox="0 0 1000 1000">
+          {Array.from({ length: 20 }, (_, i) => (
+            <g key={i}>
+              <circle
+                cx={Math.random() * 1000}
+                cy={Math.random() * 1000}
+                r="2"
+                fill="currentColor"
+                className="text-indigo-600"
+              />
+              {Array.from({ length: 3 }, (_, j) => (
+                <line
+                  key={j}
+                  x1={Math.random() * 1000}
+                  y1={Math.random() * 1000}
+                  x2={Math.random() * 1000}
+                  y2={Math.random() * 1000}
+                  stroke="currentColor"
+                  strokeWidth="0.5"
+                  className="text-indigo-400"
+                />
+              ))}
+            </g>
+          ))}
+        </svg>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div 
           className="mb-8"
@@ -190,7 +251,7 @@ const LLMSandbox: React.FC = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">LLM Transformer Sandbox</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">LLM Transformer Sandbox</h1>
           <p className="text-gray-600">
             Explore how transformers work through interactive visualizations and step-by-step execution.
           </p>
@@ -202,10 +263,59 @@ const LLMSandbox: React.FC = () => {
             >
               Take a Tour
             </button>
+            <button
+              onClick={() => setShowExplanation(!showExplanation)}
+              className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors flex items-center space-x-1"
+            >
+              <Info className="h-4 w-4" />
+              <span>How it Works</span>
+            </button>
             <div className="text-sm text-gray-500">
               Navigate • Explain • Interact • Visualize • Simulate
             </div>
           </div>
+          
+          {/* Explanation Panel */}
+          <AnimatePresence>
+            {showExplanation && (
+              <motion.div
+                className="mt-6 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-2xl p-6"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <h3 className="text-lg font-semibold text-indigo-900 mb-3 flex items-center space-x-2">
+                  <Sparkles className="h-5 w-5" />
+                  <span>How Transformers Work</span>
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4 text-sm text-indigo-800">
+                  <div>
+                    <p className="mb-2">
+                      <strong>1. Tokenization:</strong> Text is split into tokens (words/subwords)
+                    </p>
+                    <p className="mb-2">
+                      <strong>2. Embeddings:</strong> Tokens become dense vectors capturing meaning
+                    </p>
+                    <p>
+                      <strong>3. Attention:</strong> Tokens "attend" to each other for context
+                    </p>
+                  </div>
+                  <div>
+                    <p className="mb-2">
+                      <strong>4. Processing:</strong> Multiple layers refine understanding
+                    </p>
+                    <p className="mb-2">
+                      <strong>5. Probabilities:</strong> Model predicts next token likelihood
+                    </p>
+                    <p>
+                      <strong>6. Generation:</strong> Sample from probabilities for output
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -235,12 +345,20 @@ const LLMSandbox: React.FC = () => {
           >
             {/* Status Bar */}
             <motion.div 
-              className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl p-4 mb-6 shadow-sm"
+              className="bg-white/90 backdrop-blur-sm border border-indigo-200/50 rounded-2xl p-4 mb-6 shadow-lg"
               whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
               transition={{ duration: 0.2 }}
             >
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">Live Visualization</h2>
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                  <motion.div
+                    animate={{ rotate: isRunning ? 360 : 0 }}
+                    transition={{ duration: 2, repeat: isRunning ? Infinity : 0, ease: "linear" }}
+                  >
+                    <Zap className="h-5 w-5 text-indigo-600" />
+                  </motion.div>
+                  <span>Live Visualization</span>
+                </h2>
                 
                 <div className="flex items-center space-x-4 text-sm text-gray-600">
                   <div className="flex items-center space-x-1">
@@ -280,83 +398,41 @@ const LLMSandbox: React.FC = () => {
 
             {/* Main Visualization Panel */}
             <motion.div 
-              className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg"
+              className="bg-white/95 backdrop-blur-sm border border-indigo-200/50 rounded-2xl p-6 shadow-xl"
               whileHover={{ boxShadow: "0 20px 40px -10px rgba(0, 0, 0, 0.1)" }}
               transition={{ duration: 0.3 }}
             >
               {/* Tab Navigation */}
-              <div className="flex items-center space-x-4 mb-6 border-b border-gray-200 pb-4">
-                <motion.button
-                  onClick={() => setActiveTab('attention')}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all ${
-                    activeTab === 'attention' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Eye className="h-4 w-4" />
-                  <span>Attention</span>
-                  {activeTab === 'attention' && (
-                    <motion.div
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"
-                      layoutId="activeTab"
-                    />
-                  )}
-                </motion.button>
-                
-                <motion.button
-                  onClick={() => setActiveTab('embeddings')}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all ${
-                    activeTab === 'embeddings' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Layers className="h-4 w-4" />
-                  <span>Embeddings</span>
-                  {activeTab === 'embeddings' && (
-                    <motion.div
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"
-                      layoutId="activeTab"
-                    />
-                  )}
-                </motion.button>
-                
-                <motion.button
-                  onClick={() => setActiveTab('probabilities')}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all ${
-                    activeTab === 'probabilities' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <BarChart3 className="h-4 w-4" />
-                  <span>Probabilities</span>
-                  {activeTab === 'probabilities' && (
-                    <motion.div
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"
-                      layoutId="activeTab"
-                    />
-                  )}
-                </motion.button>
-                
-                <motion.button
-                  onClick={() => setActiveTab('tokens')}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all ${
-                    activeTab === 'tokens' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <GitBranch className="h-4 w-4" />
-                  <span>Token Trace</span>
-                  {activeTab === 'tokens' && (
-                    <motion.div
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"
-                      layoutId="activeTab"
-                    />
-                  )}
-                </motion.button>
+              <div className="flex flex-wrap items-center gap-2 mb-6 border-b border-gray-200 pb-4">
+                {tabConfig.map((tab) => (
+                  <motion.button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`relative flex items-center space-x-2 px-4 py-3 rounded-xl font-medium transition-all group ${
+                      activeTab === tab.id 
+                        ? `bg-${tab.color}-100 text-${tab.color}-700 shadow-md` 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    title={tab.description}
+                  >
+                    <tab.icon className="h-4 w-4" />
+                    <span>{tab.label}</span>
+                    {activeTab === tab.id && (
+                      <motion.div
+                        className={`absolute -bottom-4 left-0 right-0 h-0.5 bg-${tab.color}-600 rounded-full`}
+                        layoutId="activeTab"
+                        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                      />
+                    )}
+                    
+                    {/* Tooltip */}
+                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      {tab.description}
+                    </div>
+                  </motion.button>
+                ))}
               </div>
 
               {/* Tab Content */}
@@ -371,21 +447,54 @@ const LLMSandbox: React.FC = () => {
                 >
                 {!artifacts ? (
                   <motion.div 
-                    className="flex items-center justify-center h-96 text-gray-500"
+                    className="flex flex-col items-center justify-center h-96 text-gray-500"
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <div className="text-center">
+                    <div className="text-center space-y-4">
                       <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        animate={{ 
+                          rotate: 360,
+                          scale: [1, 1.1, 1]
+                        }}
+                        transition={{ 
+                          rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+                          scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                        }}
                       >
-                        <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <Target className="h-16 w-16 mx-auto text-indigo-400" />
                       </motion.div>
-                      <p>Run the forward pass to see visualizations</p>
-                      <div className="mt-4 text-sm text-gray-400">
-                        Input → Tokenize → Embed → Attention → Output
+                      <div>
+                        <p className="text-lg font-medium text-gray-700 mb-2">Ready to Explore</p>
+                        <p className="text-gray-500">Run the forward pass to see visualizations</p>
+                      </div>
+                      <div className="flex items-center justify-center space-x-2 text-sm text-gray-400">
+                        <span>Input</span>
+                        <motion.div 
+                          className="w-2 h-2 bg-indigo-400 rounded-full"
+                          animate={{ scale: [1, 1.5, 1] }}
+                          transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                        />
+                        <span>Tokenize</span>
+                        <motion.div 
+                          className="w-2 h-2 bg-purple-400 rounded-full"
+                          animate={{ scale: [1, 1.5, 1] }}
+                          transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+                        />
+                        <span>Embed</span>
+                        <motion.div 
+                          className="w-2 h-2 bg-blue-400 rounded-full"
+                          animate={{ scale: [1, 1.5, 1] }}
+                          transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+                        />
+                        <span>Attention</span>
+                        <motion.div 
+                          className="w-2 h-2 bg-green-400 rounded-full"
+                          animate={{ scale: [1, 1.5, 1] }}
+                          transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+                        />
+                        <span>Output</span>
                       </div>
                     </div>
                   </motion.div>
@@ -407,7 +516,7 @@ const LLMSandbox: React.FC = () => {
                         
                         <motion.div 
                           className="flex justify-center"
-                          initial={{ scale: 0.8, opacity: 0 }}
+                          initial={{ scale: 0.9, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ delay: 0.3, duration: 0.5 }}
                         >
@@ -420,7 +529,7 @@ const LLMSandbox: React.FC = () => {
                         </motion.div>
                         
                         <motion.div 
-                          className="bg-blue-50 rounded-lg p-4 text-sm text-blue-800"
+                          className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 text-sm text-blue-800 border border-blue-200"
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.5 }}
@@ -441,7 +550,7 @@ const LLMSandbox: React.FC = () => {
                         <h3 className="text-lg font-semibold text-gray-900">Embedding Projector</h3>
                         <motion.div 
                           className="flex justify-center"
-                          initial={{ scale: 0.8, opacity: 0 }}
+                          initial={{ scale: 0.9, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ delay: 0.3, duration: 0.5 }}
                         >
@@ -454,7 +563,7 @@ const LLMSandbox: React.FC = () => {
                         </motion.div>
                         
                         <motion.div 
-                          className="bg-purple-50 rounded-lg p-4 text-sm text-purple-800"
+                          className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 text-sm text-purple-800 border border-purple-200"
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.5 }}
@@ -479,7 +588,7 @@ const LLMSandbox: React.FC = () => {
                         />
                         
                         <motion.div 
-                          className="bg-green-50 rounded-lg p-4 text-sm text-green-800"
+                          className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 text-sm text-green-800 border border-green-200"
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.5 }}
@@ -504,7 +613,7 @@ const LLMSandbox: React.FC = () => {
                         />
                         
                         <motion.div 
-                          className="bg-orange-50 rounded-lg p-4 text-sm text-orange-800"
+                          className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 text-sm text-orange-800 border border-orange-200"
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.5 }}
@@ -522,12 +631,14 @@ const LLMSandbox: React.FC = () => {
 
             {/* Footer */}
             <motion.div 
-              className="mt-6 text-center text-sm text-gray-500"
+              className="mt-6 text-center text-sm text-gray-500 flex items-center justify-center space-x-2"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
             >
-              Made for NEI-VS — LLM math demo
+              <Sparkles className="h-4 w-4 text-indigo-400" />
+              <span>Made for NEI-VS — Interactive LLM Learning</span>
+              <Sparkles className="h-4 w-4 text-purple-400" />
             </motion.div>
           </motion.div>
         </div>

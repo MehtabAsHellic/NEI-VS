@@ -64,11 +64,14 @@ const Controls: React.FC<ControlsProps> = ({
     <div className="space-y-6">
       {/* Input Section */}
       <motion.div 
-        className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-sm"
+        className="bg-white/95 backdrop-blur-sm border border-indigo-200/50 rounded-2xl p-6 shadow-lg"
         whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
         transition={{ duration: 0.2 }}
       >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Input Text</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+          <span>Input Text</span>
+        </h3>
         
         {/* Preset Dropdown */}
         <div className="relative mb-3">
@@ -117,7 +120,7 @@ const Controls: React.FC<ControlsProps> = ({
         <motion.textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Enter your text here..."
+          placeholder="Enter your text here... (e.g., 'The quick brown fox jumps over the lazy dog.')"
           className="w-full h-24 px-3 py-2 border border-gray-200 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           maxLength={128}
           whileFocus={{ scale: 1.02 }}
@@ -129,11 +132,14 @@ const Controls: React.FC<ControlsProps> = ({
 
       {/* Model Controls */}
       <motion.div 
-        className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-sm"
+        className="bg-white/95 backdrop-blur-sm border border-indigo-200/50 rounded-2xl p-6 shadow-lg"
         whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
         transition={{ duration: 0.2 }}
       >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Model Controls</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+          <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+          <span>Model Controls</span>
+        </h3>
         
         <div className="space-y-4">
           <div>
@@ -146,7 +152,7 @@ const Controls: React.FC<ControlsProps> = ({
               max="128"
               value={seqLen}
               onChange={(e) => setSeqLen(parseInt(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider focus:ring-2 focus:ring-blue-500"
+              className="w-full h-3 bg-gradient-to-r from-blue-200 to-blue-300 rounded-lg appearance-none cursor-pointer slider focus:ring-2 focus:ring-blue-500"
               whileHover={{ scale: 1.02 }}
             />
           </div>
@@ -162,7 +168,7 @@ const Controls: React.FC<ControlsProps> = ({
               step="0.1"
               value={temperature}
               onChange={(e) => setTemperature(parseFloat(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider focus:ring-2 focus:ring-blue-500"
+              className="w-full h-3 bg-gradient-to-r from-orange-200 to-red-300 rounded-lg appearance-none cursor-pointer slider focus:ring-2 focus:ring-orange-500"
               whileHover={{ scale: 1.02 }}
             />
           </div>
@@ -177,7 +183,7 @@ const Controls: React.FC<ControlsProps> = ({
               max="20"
               value={topK}
               onChange={(e) => setTopK(parseInt(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider focus:ring-2 focus:ring-blue-500"
+              className="w-full h-3 bg-gradient-to-r from-green-200 to-emerald-300 rounded-lg appearance-none cursor-pointer slider focus:ring-2 focus:ring-green-500"
               whileHover={{ scale: 1.02 }}
             />
           </div>
@@ -186,11 +192,14 @@ const Controls: React.FC<ControlsProps> = ({
 
       {/* Visualization Controls */}
       <motion.div 
-        className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-sm"
+        className="bg-white/95 backdrop-blur-sm border border-indigo-200/50 rounded-2xl p-6 shadow-lg"
         whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
         transition={{ duration: 0.2 }}
       >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Visualization</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span>Visualization</span>
+        </h3>
         
         <div className="space-y-4">
           <div>
@@ -248,11 +257,14 @@ const Controls: React.FC<ControlsProps> = ({
 
       {/* Action Buttons */}
       <motion.div 
-        className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-sm"
+        className="bg-white/95 backdrop-blur-sm border border-indigo-200/50 rounded-2xl p-6 shadow-lg"
         whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
         transition={{ duration: 0.2 }}
       >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+          <span>Actions</span>
+        </h3>
         
         <div className="space-y-3">
           <motion.button
