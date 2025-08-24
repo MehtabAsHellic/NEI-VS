@@ -3,6 +3,7 @@
  */
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { getTokenChar } from '../lib/tokenizer';
 import { softmax } from '../lib/linalg';
 
@@ -28,26 +29,39 @@ const ProbBar: React.FC<ProbBarProps> = ({ logits, temperature, topK }) => {
       
       <div className="space-y-2">
         {topTokens.map((token, i) => (
-          <div key={token.id} className="flex items-center space-x-3">
+          <motion.div 
+            key={token.id} 
+            className="flex items-center space-x-3"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.1, duration: 0.3 }}
+          >
             <div className="w-12 text-sm font-mono text-gray-700">
               {token.char}
             </div>
             <div className="flex-1 bg-gray-200 rounded-full h-3 relative">
-              <div
+              <motion.div
                 className="bg-blue-600 h-3 rounded-full transition-all duration-300"
-                style={{ width: `${token.prob * 100}%` }}
+                initial={{ width: 0 }}
+                animate={{ width: `${token.prob * 100}%` }}
+                transition={{ delay: i * 0.1 + 0.2, duration: 0.5, ease: "easeOut" }}
               />
             </div>
             <div className="w-12 text-xs text-gray-600 text-right">
               {(token.prob * 100).toFixed(1)}%
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
       
-      <div className="text-xs text-gray-500 mt-2">
+      <motion.div 
+        className="text-xs text-gray-500 mt-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
+      >
         Temperature: {temperature} • Top-{topK} tokens
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -3,6 +3,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { pca2d } from '../lib/pca';
 import { getTokenChar } from '../lib/tokenizer';
 
@@ -61,20 +62,32 @@ const EmbeddingProjector: React.FC<EmbeddingProjectorProps> = ({
 
   return (
     <div className="relative">
-      <svg
+      <motion.svg
         width={width}
         height={height}
         className="border border-gray-200 rounded bg-white"
         onMouseLeave={() => setHoveredPoint(null)}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
       >
         {projectedPoints.map((point, i) => (
-          <circle
+          <motion.circle
             key={i}
             cx={point.x}
             cy={point.y}
             r={4}
             fill={getPointColor(point.token)}
             className="opacity-70 hover:opacity-100 cursor-pointer transition-opacity"
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 0.7, scale: 1 }}
+            transition={{ 
+              delay: i * 0.05,
+              duration: 0.3,
+              type: "spring",
+              damping: 25
+            }}
+            whileHover={{ scale: 1.5, opacity: 1 }}
             onMouseEnter={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               setHoveredPoint({
@@ -87,24 +100,32 @@ const EmbeddingProjector: React.FC<EmbeddingProjectorProps> = ({
             }}
           />
         ))}
-      </svg>
+      </motion.svg>
       
       {hoveredPoint && (
-        <div
+        <motion.div
           className="fixed bg-gray-900 text-white px-2 py-1 rounded text-xs pointer-events-none z-50"
           style={{
             left: hoveredPoint.x,
             top: hoveredPoint.y - 40,
             transform: 'translateX(-50%)',
           }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
         >
           <div>Token: "{hoveredPoint.token}"</div>
           <div>ID: {hoveredPoint.id}</div>
           <div>Position: {hoveredPoint.index}</div>
-        </div>
+        </motion.div>
       )}
       
-      <div className="mt-2 flex flex-wrap gap-2 text-xs">
+      <motion.div 
+        className="mt-2 flex flex-wrap gap-2 text-xs"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+      >
         <div className="flex items-center space-x-1">
           <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
           <span>Letters</span>
@@ -125,7 +146,7 @@ const EmbeddingProjector: React.FC<EmbeddingProjectorProps> = ({
           <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
           <span>Special</span>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

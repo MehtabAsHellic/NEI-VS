@@ -3,6 +3,7 @@
  */
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { getTokenChar } from '../lib/tokenizer';
 
 interface TokenTraceProps {
@@ -28,7 +29,7 @@ const TokenTrace: React.FC<TokenTraceProps> = ({
           const isPast = currentStep !== undefined && index < currentStep;
           
           return (
-            <div
+            <motion.div
               key={index}
               className={`
                 px-2 py-1 rounded text-sm font-mono border transition-all cursor-pointer
@@ -40,6 +41,20 @@ const TokenTrace: React.FC<TokenTraceProps> = ({
               onMouseEnter={() => onTokenHover?.(index)}
               onMouseLeave={() => onTokenHover?.(null)}
               title={`Token ${index}: "${char}" (ID: ${tokenId})`}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ 
+                opacity: 1, 
+                scale: isCurrent ? 1.1 : 1,
+                y: isCurrent ? -2 : 0
+              }}
+              transition={{ 
+                delay: index * 0.05,
+                duration: 0.3,
+                type: "spring",
+                damping: 25
+              }}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
             >
               <div className="text-xs text-center mb-1 opacity-60">
                 {index}
@@ -51,15 +66,28 @@ const TokenTrace: React.FC<TokenTraceProps> = ({
                   char === ' ' ? '␣' : char
                 )}
               </div>
-            </div>
+              
+              {isCurrent && (
+                <motion.div
+                  className="absolute -inset-1 bg-blue-400 rounded opacity-30 -z-10"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                />
+              )}
+            </motion.div>
           );
         })}
       </div>
       
       {currentStep !== undefined && (
-        <div className="text-xs text-gray-600">
+        <motion.div 
+          className="text-xs text-gray-600"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
           Step {currentStep + 1} of {tokens.length}
-        </div>
+        </motion.div>
       )}
     </div>
   );

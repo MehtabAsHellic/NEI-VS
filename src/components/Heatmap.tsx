@@ -3,6 +3,7 @@
  */
 
 import React, { useRef, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { getTokenChar } from '../lib/tokenizer';
 
 interface HeatmapProps {
@@ -99,27 +100,34 @@ const Heatmap: React.FC<HeatmapProps> = ({
 
   return (
     <div className="relative">
-      <canvas
+      <motion.canvas
         ref={canvasRef}
         width={width}
         height={height}
         className="border border-gray-200 rounded cursor-crosshair"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
       />
       
       {tooltip.visible && (
-        <div
+        <motion.div
           className="fixed bg-gray-900 text-white px-2 py-1 rounded text-xs pointer-events-none z-50"
           style={{
             left: tooltip.x + 10,
             top: tooltip.y - 30,
           }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.2 }}
         >
           <div>Query: {tooltip.queryIdx} ({getTokenChar(tokens[tooltip.queryIdx])})</div>
           <div>Key: {tooltip.keyIdx} ({getTokenChar(tokens[tooltip.keyIdx])})</div>
           <div>Attention: {tooltip.value.toFixed(3)}</div>
-        </div>
+        </motion.div>
       )}
     </div>
   );
