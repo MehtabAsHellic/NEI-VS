@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { Play, Zap, Loader } from 'lucide-react';
 import { useSandboxStore } from '../../store/useSandboxStore';
 import { generateWithGemini } from '../../lib/gemini';
+import { forward, initWeights } from '../../lib/tiny-transformer';
 
 const RunButton: React.FC = () => {
   const {
@@ -14,14 +15,19 @@ const RunButton: React.FC = () => {
     temperature,
     topK,
     isProcessing,
+    processingPhase,
     setIsProcessing,
     setCurrentStep,
+    setProcessingPhase,
     setResponse,
+    setTransformerResults,
     setError,
+    setActiveVisualization,
+    setAnimationQueue,
     reset
   } = useSandboxStore();
 
-  const handleRun = async () => {
+  const runSequentialProcessing = async () => {
     if (!prompt.trim()) {
       setError('Please enter a prompt first');
       return;
@@ -32,15 +38,46 @@ const RunButton: React.FC = () => {
     setError(null);
 
     try {
-      // Simulate step-by-step processing
-      const steps = ['tokenization', 'embeddings', 'attention', 'processing', 'probabilities', 'output'];
+      const steps = ['tokenization', 'embeddings', 'attention', 'processing', 'probabilities', 'output'] as const;
+      setAnimationQueue([...steps]);
       
+      // Step 1-5: Run transformer internals with animations
       for (let i = 0; i < steps.length; i++) {
+        setProcessingPhase(steps[i]);
+        setActiveVisualization(steps[i]);
         setCurrentStep(i);
-        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate processing time
+        
+        if (i === 0) {
+          // Initialize transformer on first step
+          const hyper = {
+            d_model: 64,
+            n_head: 4,
+            d_head: 16,
+            n_layer: 2,
+            seqLen: 64,
+            ffn_mult: 2,
+          };
+          
+          const weights = initWeights(hyper, 1337);
+          const results = forward(prompt, hyper, weights, {
+            temperature,
+            topK,
+            layerView: 0,
+            headView: 0,
+          });
+          
+          setTransformerResults(results);
+        }
+        
+        // Animation delay for each step
+        await new Promise(resolve => setTimeout(resolve, 1200));
       }
 
-      // Generate actual response
+      // Step 6: Generate final response with Gemini
+      setProcessingPhase('output');
+      setActiveVisualization('output');
+      setCurrentStep(5);
+      
       const response = await generateWithGemini(prompt, temperature, topK);
       setResponse(response);
       
@@ -49,6 +86,7 @@ const RunButton: React.FC = () => {
       setError(error instanceof Error ? error.message : 'Failed to generate response');
     } finally {
       setIsProcessing(false);
+      setProcessingPhase('idle');
     }
   };
 
@@ -62,7 +100,7 @@ const RunButton: React.FC = () => {
       transition={{ duration: 0.5, delay: 0.6 }}
     >
       <motion.button
-        onClick={handleRun}
+        onClick={runSequentialProcessing}
         disabled={isDisabled}
         className={`
           relative px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 flex items-center space-x-3 shadow-lg
@@ -97,7 +135,7 @@ const RunButton: React.FC = () => {
 
         {/* Text */}
         <span className="relative z-10">
-          {isProcessing ? 'Processing...' : 'Run LLM Inference'}
+          {isProcessing ? `Processing ${processingPhase}...` : 'Run LLM Inference'}
         </span>
 
         {/* Sparkle Effect */}

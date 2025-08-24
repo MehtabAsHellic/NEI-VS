@@ -8,10 +8,20 @@ import { Type, Hash } from 'lucide-react';
 import { useSandboxStore } from '../../../store/useSandboxStore';
 
 const TokenizationStep: React.FC = () => {
-  const { prompt, response, isProcessing } = useSandboxStore();
+  const { prompt, transformerResults, isProcessing, processingPhase } = useSandboxStore();
 
   // Simulate tokenization for display
   const tokens = React.useMemo(() => {
+    if (transformerResults?.processingSteps.tokenization) {
+      return transformerResults.processingSteps.tokenization.tokenStrings.map((token, index) => ({
+        id: transformerResults.processingSteps.tokenization.tokens[index],
+        text: token,
+        type: /\s/.test(token) ? 'space' : 
+              /[.,!?;:]/.test(token) ? 'punctuation' : 
+              /\d/.test(token) ? 'number' : 'word'
+      }));
+    }
+    
     if (!prompt) return [];
     
     // Simple tokenization simulation - in reality this would be much more complex
@@ -37,6 +47,7 @@ const TokenizationStep: React.FC = () => {
     }
   };
 
+  const isCurrentlyProcessing = processingPhase === 'tokenization';
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-3">
@@ -45,6 +56,13 @@ const TokenizationStep: React.FC = () => {
         <div className="text-sm text-gray-600">
           {tokens.length} tokens
         </div>
+        {isCurrentlyProcessing && (
+          <motion.div
+            className="w-2 h-2 bg-blue-600 rounded-full"
+            animate={{ scale: [1, 1.5, 1] }}
+            transition={{ duration: 0.8, repeat: Infinity }}
+          />
+        )}
       </div>
 
       {prompt ? (
@@ -72,7 +90,7 @@ const TokenizationStep: React.FC = () => {
                   initial={{ opacity: 0, scale: 0.8, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   transition={{ 
-                    delay: index * 0.1,
+                    delay: isCurrentlyProcessing ? index * 0.1 : 0,
                     duration: 0.3,
                     type: "spring",
                     damping: 20
@@ -124,7 +142,7 @@ const TokenizationStep: React.FC = () => {
           </div>
 
           {/* Processing Animation */}
-          {isProcessing && (
+          {isCurrentlyProcessing && (
             <motion.div
               className="flex items-center justify-center py-8"
               initial={{ opacity: 0 }}

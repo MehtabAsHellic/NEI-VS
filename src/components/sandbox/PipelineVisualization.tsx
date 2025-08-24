@@ -77,16 +77,25 @@ const PipelineVisualization: React.FC = () => {
   const {
     isProcessing,
     currentStep,
+    processingPhase,
     activeVisualization,
     setActiveVisualization,
     showExplanations,
     setShowExplanations,
-    response
+    response,
+    runFromStep
   } = useSandboxStore();
 
   const activeStepData = PIPELINE_STEPS.find(step => step.id === activeVisualization);
   const ActiveComponent = activeStepData?.component;
 
+  const handleStepClick = (stepId: typeof activeVisualization) => {
+    if (!isProcessing) {
+      runFromStep(stepId);
+    } else {
+      setActiveVisualization(stepId);
+    }
+  };
   return (
     <div className="space-y-6">
       {/* Pipeline Overview */}
@@ -117,12 +126,13 @@ const PipelineVisualization: React.FC = () => {
           {PIPELINE_STEPS.map((step, index) => {
             const isActive = activeVisualization === step.id;
             const isCompleted = isProcessing && currentStep > index;
-            const isCurrent = isProcessing && currentStep === index;
+            const isCurrent = processingPhase === step.id;
+            const isClickable = !isProcessing || isCompleted || isCurrent;
             
             return (
               <motion.button
                 key={step.id}
-                onClick={() => setActiveVisualization(step.id)}
+                onClick={() => handleStepClick(step.id)}
                 className={`relative p-4 rounded-xl border-2 transition-all text-left ${
                   isActive
                     ? `border-${step.color}-500 bg-${step.color}-50`
@@ -130,11 +140,13 @@ const PipelineVisualization: React.FC = () => {
                     ? 'border-green-300 bg-green-50'
                     : isCurrent
                     ? `border-${step.color}-300 bg-${step.color}-25 animate-pulse`
-                    : 'border-gray-200 bg-white hover:border-gray-300'
+                    : isClickable
+                    ? 'border-gray-200 bg-white hover:border-gray-300 cursor-pointer'
+                    : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-50'
                 }`}
-                whileHover={{ scale: 1.02, y: -2 }}
+                whileHover={isClickable ? { scale: 1.02, y: -2 } : {}}
                 whileTap={{ scale: 0.98 }}
-                disabled={isProcessing && currentStep < index}
+                disabled={!isClickable}
               >
                 <div className="flex items-center space-x-2 mb-2">
                   <step.icon className={`h-5 w-5 ${
@@ -179,6 +191,13 @@ const PipelineVisualization: React.FC = () => {
                     <div className="w-2 h-2 bg-white rounded-full" />
                   </motion.div>
                 )}
+                
+                {/* Click hint */}
+                {isClickable && !isProcessing && (
+                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Click to run from here
+                  </div>
+                )}
               </motion.button>
             );
           })}
@@ -191,10 +210,10 @@ const PipelineVisualization: React.FC = () => {
               key={i}
               className="flex items-center"
               animate={{
-                opacity: isProcessing && currentStep > i ? 1 : 0.3,
-                x: isProcessing && currentStep === i ? [0, 5, 0] : 0
+                opacity: currentStep > i ? 1 : 0.3,
+                x: processingPhase === PIPELINE_STEPS[i]?.id ? [0, 5, 0] : 0
               }}
-              transition={{ duration: 0.5, repeat: isProcessing && currentStep === i ? Infinity : 0 }}
+              transition={{ duration: 0.5, repeat: processingPhase === PIPELINE_STEPS[i]?.id ? Infinity : 0 }}
             >
               <ArrowRight className="h-4 w-4 text-gray-400" />
             </motion.div>

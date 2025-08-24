@@ -8,15 +8,25 @@ import { Eye, Target } from 'lucide-react';
 import { useSandboxStore } from '../../../store/useSandboxStore';
 
 const AttentionStep: React.FC = () => {
-  const { prompt, response, isProcessing } = useSandboxStore();
+  const { prompt, transformerResults, processingPhase } = useSandboxStore();
 
   const tokens = React.useMemo(() => {
+    if (transformerResults?.processingSteps.tokenization) {
+      return transformerResults.processingSteps.tokenization.tokenStrings.slice(0, 8);
+    }
     if (!prompt) return [];
-    return prompt.split(/\s+/).filter(t => t.length > 0).slice(0, 8); // Limit for visualization
-  }, [prompt]);
+    return prompt.split(/\s+/).filter(t => t.length > 0).slice(0, 8);
+  }, [prompt, transformerResults]);
 
   // Generate mock attention weights
   const attentionMatrix = React.useMemo(() => {
+    if (transformerResults?.processingSteps.attention.matrices?.[0]?.[0]) {
+      // Use real attention data if available
+      const realMatrix = transformerResults.processingSteps.attention.matrices[0][0];
+      const size = Math.min(tokens.length, realMatrix.length);
+      return realMatrix.slice(0, size).map(row => row.slice(0, size));
+    }
+    
     if (!tokens.length) return [];
     
     return tokens.map((_, i) => 
@@ -27,9 +37,10 @@ const AttentionStep: React.FC = () => {
         return Math.max(0.1, Math.min(1, baseAttention));
       })
     );
-  }, [tokens]);
+  }, [tokens, transformerResults]);
 
   const [selectedToken, setSelectedToken] = React.useState<number | null>(null);
+  const isCurrentlyProcessing = processingPhase === 'attention';
 
   return (
     <div className="space-y-6">
@@ -39,6 +50,13 @@ const AttentionStep: React.FC = () => {
         <div className="text-sm text-gray-600">
           Multi-head self-attention
         </div>
+        {isCurrentlyProcessing && (
+          <motion.div
+            className="w-2 h-2 bg-green-600 rounded-full"
+            animate={{ scale: [1, 1.5, 1] }}
+            transition={{ duration: 0.8, repeat: Infinity }}
+          />
+        )}
       </div>
 
       {prompt && tokens.length > 0 ? (
@@ -61,6 +79,9 @@ const AttentionStep: React.FC = () => {
                   }`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: isCurrentlyProcessing ? index * 0.1 : 0 }}
                 >
                   {token}
                 </motion.button>
@@ -90,7 +111,7 @@ const AttentionStep: React.FC = () => {
                   className="flex items-center"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
+                  transition={{ delay: isCurrentlyProcessing ? i * 0.1 : 0 }}
                 >
                   <div className="w-20 text-xs font-medium text-gray-600 text-right pr-2">
                     {tokens[i]}
@@ -105,6 +126,9 @@ const AttentionStep: React.FC = () => {
                       }}
                       whileHover={{ scale: 1.1, zIndex: 10 }}
                       title={`${tokens[i]} → ${tokens[j]}: ${(attention * 100).toFixed(1)}%`}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: isCurrentlyProcessing ? (i * tokens.length + j) * 0.02 : 0 }}
                     >
                       {attention > 0.7 && (
                         <motion.div
@@ -179,12 +203,12 @@ const AttentionStep: React.FC = () => {
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-green-50 rounded-lg p-3 text-center">
               <div className="text-2xl font-bold text-green-600">16</div>
-              <div className="text-xs text-green-700">Attention Heads</div>
+                {transformerResults?.processingSteps.attention.heads || 16}
             </div>
             
             <div className="bg-emerald-50 rounded-lg p-3 text-center">
               <div className="text-2xl font-bold text-emerald-600">24</div>
-              <div className="text-xs text-emerald-700">Layers</div>
+                {transformerResults?.processingSteps.attention.layers || 24}
             </div>
             
             <div className="bg-teal-50 rounded-lg p-3 text-center">
@@ -196,7 +220,7 @@ const AttentionStep: React.FC = () => {
           </div>
 
           {/* Processing Animation */}
-          {isProcessing && (
+          {isCurrentlyProcessing && (
             <motion.div
               className="flex items-center justify-center py-8"
               initial={{ opacity: 0 }}

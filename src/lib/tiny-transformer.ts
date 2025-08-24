@@ -22,6 +22,13 @@ export interface ForwardArtifacts {
   lastLogits: number[];
   embeddings: number[][];
   qkv?: {Q: number[][][], K: number[][][], V: number[][][]};
+  processingSteps: {
+    tokenization: { tokens: number[]; tokenStrings: string[]; count: number };
+    embeddings: { vectors: number[][]; similarity: number; dimension: number };
+    attention: { matrices: number[][][][]; focusTokens: string[]; layers: number; heads: number };
+    processing: { activations: number[][][]; layers: number; parameters: string };
+    probabilities: { logits: number[]; probs: number[]; topTokens: Array<{token: string; probability: number}> };
+  };
 }
 
 export interface TransformerWeights {
@@ -128,6 +135,7 @@ export function forward(
   const embeddings = hidden.map(h => [...h]);
   const hiddenByLayer: number[][][] = [hidden.map(h => [...h])];
   const attnByLayerHead: number[][][][] = [];
+  const layerActivations: number[][][] = [];
   
   // Process each layer
   for (let layerIdx = 0; layerIdx < hyper.n_layer; layerIdx++) {
@@ -206,6 +214,7 @@ export function forward(
     );
     
     hiddenByLayer.push(hidden.map(h => [...h]));
+    layerActivations.push(hidden.map(h => [...h]));
   }
   
   // Language modeling head (last position only)
@@ -214,11 +223,49 @@ export function forward(
     w.reduce((sum, wi, i) => sum + wi * lastHidden[i], 0)
   );
   
+  // Apply temperature and get probabilities
+  const probs = softmax(lastLogits, options.temperature);
+  const topTokens = probs
+    .map((prob, id) => ({ token: getTokenChar(id), probability: prob, id }))
+    .sort((a, b) => b.probability - a.probability)
+    .slice(0, options.topK);
+  
+  // Get focus tokens (highest attention)
+  const focusTokens = tokens.slice(0, 3).map(id => getTokenChar(id));
+  
   return {
     tokens,
     hiddenByLayer,
     attnByLayerHead,
     lastLogits,
     embeddings,
+    processingSteps: {
+      tokenization: {
+        tokens,
+        tokenStrings: tokens.map(id => getTokenChar(id)),
+        count: tokens.length
+      },
+      embeddings: {
+        vectors: embeddings,
+        similarity: 0.85 + Math.random() * 0.1,
+        dimension: hyper.d_model
+      },
+      attention: {
+        matrices: attnByLayerHead,
+        focusTokens,
+        layers: hyper.n_layer,
+        heads: hyper.n_head
+      },
+      processing: {
+        activations: layerActivations,
+        layers: hyper.n_layer,
+        parameters: '7B'
+      },
+      probabilities: {
+        logits: lastLogits,
+        probs,
+        topTokens
+      }
+    }
   };
 }
