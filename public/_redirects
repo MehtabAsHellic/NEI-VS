@@ -1,0 +1,5 @@
+# Netlify-style redirects (if you ever switch to Netlify)
+/dashboard /#dashboard 302
+
+# Fallback for SPA
+/* /index.html 200

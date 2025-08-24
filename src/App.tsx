@@ -19,18 +19,44 @@ function App() {
   }, [checkAuth]);
 
   React.useEffect(() => {
-    // Check URL hash to determine view
-    const hash = window.location.hash;
-    if (hash === '#dashboard' && isAuthenticated) {
+    // Check for redirect parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirect = urlParams.get('redirect');
+    
+    if (redirect === 'dashboard' && isAuthenticated) {
+      // Clean up URL and redirect to dashboard
+      window.history.replaceState(null, '', '/#dashboard');
       setCurrentView('dashboard');
       setShowLanding(false);
-    } else if (hash && hash !== '#dashboard') {
-      setCurrentView('main');
-      setShowLanding(false);
-    } else if (!isAuthenticated) {
-      setCurrentView('landing');
-      setShowLanding(true);
+      return;
     }
+    
+    const handleRouting = () => {
+      const hash = window.location.hash;
+      const pathname = window.location.pathname;
+      
+      // Handle direct /dashboard URL (redirect from Appwrite)
+      if (pathname === '/dashboard' && isAuthenticated) {
+        window.history.replaceState(null, '', '/#dashboard');
+        setCurrentView('dashboard');
+        setShowLanding(false);
+        return;
+      }
+      
+      // Handle hash-based routing
+      if (hash === '#dashboard' && isAuthenticated) {
+        setCurrentView('dashboard');
+        setShowLanding(false);
+      } else if (hash && hash !== '#dashboard') {
+        setCurrentView('main');
+        setShowLanding(false);
+      } else if (!isAuthenticated) {
+        setCurrentView('landing');
+        setShowLanding(true);
+      }
+    };
+    
+    handleRouting();
   }, [isAuthenticated]);
 
   // Handle hash changes

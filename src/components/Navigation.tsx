@@ -99,7 +99,7 @@ const Navigation: React.FC = () => {
             {isAuthenticated ? (
               <div className="hidden md:flex items-center space-x-4">
                 <a
-                  href="#dashboard"
+                  href="/#dashboard"
                   className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
                 >
                   <User className="h-4 w-4" />
@@ -170,7 +170,7 @@ const Navigation: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <a
-                  href="#dashboard"
+                  href="/#dashboard"
                   className="block w-full text-left px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors"
                 >
                   Dashboard

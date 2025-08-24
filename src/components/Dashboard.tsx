@@ -159,7 +159,7 @@ const Dashboard: React.FC = () => {
                   {quickActions.map((action, index) => (
                     <motion.a
                       key={action.title}
-                      href={action.href}
+                      href={action.href.startsWith('#') ? `/${action.href}` : action.href}
                       className="group relative bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200"
                       whileHover={{ y: -2, scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}

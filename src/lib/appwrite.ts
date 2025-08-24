@@ -15,7 +15,7 @@ export const authService = {
     try {
       await account.createOAuth2Session(
         'google',
-        'https://neivs.vercel.app/dashboard',
+        'https://neivs.vercel.app/?redirect=dashboard',
         'https://neivs.vercel.app/'
       );
     } catch (error) {

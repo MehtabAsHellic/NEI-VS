@@ -58,6 +58,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: true });
       const user = await authService.getCurrentUser();
       set({ user, isAuthenticated: !!user });
+      
+      // Handle post-authentication routing
+      if (user && window.location.pathname === '/dashboard') {
+        window.history.replaceState(null, '', '/#dashboard');
+      }
     } catch (error) {
       set({ user: null, isAuthenticated: false });
     } finally {
