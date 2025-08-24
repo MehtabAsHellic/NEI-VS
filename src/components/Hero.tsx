@@ -41,7 +41,7 @@ const Hero: React.FC = () => {
             
             <div className="flex flex-col sm:flex-row gap-4">
               <a 
-                href="#llm-sandbox"
+                href="#ai-sandbox"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all hover:scale-105 hover:-translate-y-1 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
               >
                 <BookOpen className="h-5 w-5" />

@@ -7,7 +7,7 @@ const Navigation: React.FC = () => {
 
   React.useEffect(() => {
     const handleScroll = () => {
-      const sections = ['learn', 'sandbox', 'llm-sandbox'];
+      const sections = ['learn', 'ai-sandbox'];
       const scrollPosition = window.scrollY + 100;
 
       for (const section of sections) {
@@ -62,9 +62,9 @@ const Navigation: React.FC = () => {
               <span>Learn</span>
             </button>
             <button 
-              onClick={() => scrollToSection('sandbox')}
+              onClick={() => scrollToSection('ai-sandbox')}
               className={`flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors font-medium ${
-                activeSection === 'sandbox' ? 'text-blue-600' : ''
+                activeSection === 'ai-sandbox' ? 'text-blue-600' : ''
               }`}
             >
               <Gamepad2 className="h-4 w-4" />
@@ -115,7 +115,7 @@ const Navigation: React.FC = () => {
               Learn
             </button>
             <button 
-              onClick={() => scrollToSection('sandbox')}
+              onClick={() => scrollToSection('ai-sandbox')}
               className="block w-full text-left px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors"
             >
               Sandbox
