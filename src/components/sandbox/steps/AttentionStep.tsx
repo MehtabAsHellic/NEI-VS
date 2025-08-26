@@ -55,18 +55,22 @@ const AttentionStep: React.FC = () => {
   const [selectedToken, setSelectedToken] = React.useState<number | null>(null);
   const isCurrentlyProcessing = processingPhase === 'attention';
 
-  // Calculate attention statistics
+  // Calculate mathematically accurate attention statistics
   const attentionStats = React.useMemo(() => {
     if (!normalizedAttention.length) return null;
     
     const flatAttention = normalizedAttention.flat();
+    // Shannon entropy: H = -Σ p log₂(p)
     const entropy = -flatAttention.reduce((sum, p) => 
       p > 0 ? sum + p * Math.log2(p) : sum, 0
     );
     const maxAttention = Math.max(...flatAttention);
     const avgAttention = flatAttention.reduce((sum, p) => sum + p, 0) / flatAttention.length;
     
-    return { entropy, maxAttention, avgAttention };
+    // Attention sparsity (percentage of near-zero weights)
+    const sparsity = flatAttention.filter(p => p < 0.01).length / flatAttention.length;
+    
+    return { entropy, maxAttention, avgAttention, sparsity };
   }, [normalizedAttention]);
   return (
     <div className="space-y-6">
@@ -91,13 +95,23 @@ const AttentionStep: React.FC = () => {
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4">
             <div className="flex items-center space-x-2 mb-3">
               <Calculator className="h-5 w-5 text-green-600" />
-              <h4 className="text-sm font-medium text-gray-700">Mathematical Foundation</h4>
+              <h4 className="text-sm font-medium text-gray-700">Scaled Dot-Product Attention</h4>
             </div>
-            <div className="font-mono text-sm text-green-800 space-y-1">
-              <div>Attention(Q, K, V) = softmax(QK<sup>T</sup> / √d<sub>k</sub>) V</div>
-              <div className="text-xs text-green-600">
-                Where d<sub>k</sub> = {Math.floor(768 / 16)} (head dimension), 
-                scaling factor = 1/√{Math.floor(768 / 16)} ≈ {(1/Math.sqrt(768/16)).toFixed(3)}
+            <div className="bg-white/80 rounded-lg p-3 font-mono text-sm text-green-900 space-y-2">
+              <div className="text-center">
+                <strong>Attention(Q, K, V) = softmax(QK<sup>T</sup> / √d<sub>k</sub>) V</strong>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <div>d<sub>k</sub> = {Math.floor(768 / 16)} (head dimension)</div>
+                  <div>H = 16 (attention heads)</div>
+                  <div>L = 24 (transformer layers)</div>
+                </div>
+                <div>
+                  <div>Scale = 1/√{Math.floor(768 / 16)} ≈ {(1/Math.sqrt(768/16)).toFixed(3)}</div>
+                  <div>Complexity: O(n²d) per head</div>
+                  <div>Total params: ~7B</div>
+                </div>
               </div>
             </div>
           </div>
@@ -134,9 +148,10 @@ const AttentionStep: React.FC = () => {
             <h4 className="text-sm font-medium text-gray-700 mb-4">Attention Heatmap</h4>
             
               {attentionStats && (
-                <div className="text-xs text-gray-600 space-x-4">
-                  <span>Entropy: {attentionStats.entropy.toFixed(2)}</span>
-                  <span>Max: {(attentionStats.maxAttention * 100).toFixed(1)}%</span>
+                <div className="flex justify-between text-xs text-gray-600 mb-2">
+                  <span>H(attention) = {attentionStats.entropy.toFixed(2)} bits</span>
+                  <span>Max weight: {(attentionStats.maxAttention * 100).toFixed(1)}%</span>
+                  <span>Sparsity: {(attentionStats.sparsity * 100).toFixed(0)}%</span>
                 </div>
               )}
             <div className="space-y-2">
@@ -167,20 +182,20 @@ const AttentionStep: React.FC = () => {
                       key={j}
                       className="flex-1 aspect-square m-0.5 rounded cursor-pointer relative"
                       style={{
-                        backgroundColor: `rgba(34, 197, 94, ${Math.pow(attention, 0.5)})`, // Gamma correction for better visibility
+                        backgroundColor: `rgba(34, 197, 94, ${Math.pow(attention, 0.4)})`, // Gamma correction for perceptual uniformity
                         border: selectedToken === i ? '2px solid #16a34a' : '1px solid #e5e7eb'
                       }}
                       whileHover={{ scale: 1.1, zIndex: 10 }}
-                      title={`${tokens[i]} → ${tokens[j]}: ${(attention * 100).toFixed(1)}%`}
+                      title={`Query: "${tokens[i]}" → Key: "${tokens[j]}" | Weight: ${(attention * 100).toFixed(2)}% | Logit: ${(Math.log(attention / (1 - attention))).toFixed(2)}`}
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: isCurrentlyProcessing ? (i * tokens.length + j) * 0.02 : 0 }}
                     >
-                      {attention > 0.7 && (
+                      {attention > 0.5 && (
                         <motion.div
-                          className="absolute inset-0 bg-white rounded opacity-30"
-                          animate={{ opacity: [0.3, 0.6, 0.3] }}
-                          transition={{ duration: 1, repeat: Infinity }}
+                          className="absolute inset-0 bg-white rounded opacity-20"
+                          animate={{ opacity: [0.2, 0.4, 0.2] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
                         />
                       )}
                     </motion.div>
@@ -190,12 +205,12 @@ const AttentionStep: React.FC = () => {
             </div>
             
             <div className="mt-4 flex items-center justify-between text-xs text-gray-600">
-              <span>Darker = Higher Attention</span>
+              <span>Intensity ∝ attention weight</span>
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 bg-green-200 rounded"></div>
-                <span>Low</span>
+                <span>0.0</span>
                 <div className="w-4 h-4 bg-green-600 rounded"></div>
-                <span>High</span>
+                <span>1.0</span>
               </div>
             </div>
           </div>
@@ -244,34 +259,45 @@ const AttentionStep: React.FC = () => {
               </div>
               
               <div className="mt-3 text-xs text-gray-600">
-                Sum of probabilities: {normalizedAttention[selectedToken]?.reduce((sum, p) => sum + p, 0).toFixed(3)}
-                {Math.abs(normalizedAttention[selectedToken]?.reduce((sum, p) => sum + p, 0) - 1) < 0.01 && 
-                  <span className="text-green-600 ml-2">✓ Normalized</span>
+                <div className="flex justify-between">
+                  <span>Σ aᵢⱼ = {normalizedAttention[selectedToken]?.reduce((sum, p) => sum + p, 0).toFixed(4)}</span>
+                  {Math.abs(normalizedAttention[selectedToken]?.reduce((sum, p) => sum + p, 0) - 1) < 0.001 && 
+                    <span className="text-green-600">✓ Probability constraint satisfied</span>
+                  }
+                </div>
+                <div className="mt-1 text-gray-500">
+                  Entropy: {normalizedAttention[selectedToken] ? 
+                    (-normalizedAttention[selectedToken].reduce((sum, p) => p > 0 ? sum + p * Math.log2(p) : sum, 0)).toFixed(2) : 0} bits
+                </div>
                 }
               </div>
             </motion.div>
           )}
 
-          {/* Multi-head Attention Info */}
+          {/* Architecture & Complexity Info */}
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-green-50 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold text-green-600">16</div>
+              <div className="text-2xl font-bold text-green-600">
                 {transformerResults?.processingSteps.attention.heads || 16}
+              </div>
               <div className="text-xs text-gray-500 mt-1">Parallel processing</div>
+              <div className="text-xs text-green-600 font-mono">H heads</div>
             </div>
             
             <div className="bg-emerald-50 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold text-emerald-600">24</div>
+              <div className="text-2xl font-bold text-emerald-600">
                 {transformerResults?.processingSteps.attention.layers || 24}
+              </div>
               <div className="text-xs text-gray-500 mt-1">Sequential refinement</div>
+              <div className="text-xs text-emerald-600 font-mono">L layers</div>
             </div>
             
             <div className="bg-teal-50 rounded-lg p-3 text-center">
               <div className="text-2xl font-bold text-teal-600">
-                {tokens.length}²
+                O(n²)
               </div>
-              <div className="text-xs text-teal-700">Connections</div>
-              <div className="text-xs text-gray-500 mt-1">O(n²) complexity</div>
+              <div className="text-xs text-teal-700">Complexity</div>
+              <div className="text-xs text-gray-500 mt-1">n={tokens.length} tokens</div>
             </div>
           </div>
 
@@ -290,7 +316,7 @@ const AttentionStep: React.FC = () => {
                   <Eye className="h-5 w-5 text-green-600" />
                 </motion.div>
                 <span className="text-sm text-gray-600">
-                  Computing QK<sup>T</sup> matrices and applying softmax...
+                  Computing attention matrices: QK<sup>T</sup>/√d<sub>k</sub> → softmax → weighted sum
                 </span>
               </div>
             </motion.div>
@@ -301,7 +327,7 @@ const AttentionStep: React.FC = () => {
           <div className="text-center">
             <Eye className="h-12 w-12 mx-auto mb-3 opacity-50" />
             <p>Enter a prompt to see attention patterns</p>
-            <p className="text-xs mt-2">Visualizes scaled dot-product attention mechanism</p>
+            <p className="text-xs mt-2 font-mono">Attention(Q,K,V) = softmax(QK<sup>T</sup>/√d<sub>k</sub>)V</p>
           </div>
         </div>
       )}

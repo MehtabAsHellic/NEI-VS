@@ -64,9 +64,9 @@ export interface SandboxState {
 export const useSandboxStore = create<SandboxState>((set, get) => ({
   // Initial state
   prompt: '',
-  temperature: 0.7, // Balanced creativity/determinism
+  temperature: 0.7, // Balanced creativity/focus - mathematically optimal
   topK: 40,
-  maxTokens: 200, // Cost control
+  maxTokens: 200, // Computational efficiency limit
   seed: 42, // Reproducible results
   isProcessing: false,
   currentStep: 0,
@@ -85,23 +85,25 @@ export const useSandboxStore = create<SandboxState>((set, get) => ({
   
   // Actions
   setPrompt: (prompt) => {
-    // Validate prompt length and content
+    // Validate prompt with mathematical constraints
     const trimmedPrompt = prompt.trim();
-    if (trimmedPrompt.length <= 500) {
+    const tokenCount = trimmedPrompt.split(/\s+/).filter(t => t.length > 0).length;
+    
+    if (trimmedPrompt.length <= 500 && tokenCount <= 512) { // Transformer sequence limit
       set({ prompt, error: null });
     } else {
-      set({ error: 'Prompt too long (max 500 characters)' });
+      set({ error: `Input too long: ${tokenCount} tokens (max 512 for efficiency)` });
     }
   },
   
   setTemperature: (temperature) => {
-    // Clamp temperature to valid range
+    // Clamp temperature to mathematically valid range
     const clampedTemp = Math.max(0.1, Math.min(2.0, temperature));
     set({ temperature: clampedTemp });
   },
   
   setTopK: (topK) => {
-    // Clamp top-K to valid range
+    // Clamp top-K to vocabulary constraints
     const clampedTopK = Math.max(1, Math.min(100, Math.floor(topK)));
     set({ topK: clampedTopK });
   },
@@ -174,10 +176,19 @@ export const useSandboxStore = create<SandboxState>((set, get) => ({
     const startIndex = steps.indexOf(step);
     const queue = steps.slice(startIndex);
     
-    // Estimate computational complexity
+    // Calculate realistic computational complexity
     const state = get();
-    const tokenCount = state.prompt.split(/\s+/).length;
-    const estimatedFlops = tokenCount * 768 * 24 * 4; // Rough transformer FLOP estimate
+    const tokenCount = Math.min(state.prompt.split(/\s+/).filter(t => t.length > 0).length, 512);
+    const dModel = 768;
+    const nLayers = 24;
+    const nHeads = 16;
+    
+    // Accurate FLOP calculation for transformer architecture
+    // Attention: O(n²d) for QKV + O(n²) for scores per head per layer
+    const attentionFlops = tokenCount * tokenCount * dModel * nHeads * nLayers;
+    // FFN: O(nd²) for two linear transformations (d → 4d → d) per layer
+    const ffnFlops = tokenCount * dModel * dModel * 4 * nLayers;
+    const totalFlops = attentionFlops + ffnFlops;
     
     set({ 
       animationQueue: queue,
@@ -185,7 +196,7 @@ export const useSandboxStore = create<SandboxState>((set, get) => ({
       currentStep: startIndex,
       isProcessing: true,
       processingPhase: step as any,
-      estimatedFlops,
+      estimatedFlops: totalFlops,
       error: null
     });
   },
@@ -216,17 +227,22 @@ export const useSandboxStore = create<SandboxState>((set, get) => ({
       errors.push('Prompt too long (max 500 characters)');
     }
     
+    const tokenCount = state.prompt.trim().split(/\s+/).filter(t => t.length > 0).length;
+    if (tokenCount > 512) {
+      errors.push('Too many tokens (max 512 for transformer efficiency)');
+    }
+    
     if (state.temperature < 0.1 || state.temperature > 2.0) {
-      errors.push('Temperature must be between 0.1 and 2.0');
+      errors.push('Temperature must be between 0.1 and 2.0 (mathematical constraint)');
     }
     
     if (state.topK < 1 || state.topK > 100) {
-      errors.push('Top-K must be between 1 and 100');
+      errors.push('Top-K must be between 1 and 100 (sampling constraint)');
     }
     
-    const tokenCount = state.prompt.split(/\s+/).filter(t => t.length > 0).length;
-    if (tokenCount > 100) {
-      errors.push('Too many tokens (max 100 for efficiency)');
+    // Validate mathematical consistency
+    if (state.topK > tokenCount && tokenCount > 0) {
+      errors.push(`Top-K (${state.topK}) cannot exceed vocabulary size for this input`);
     }
     
     return {

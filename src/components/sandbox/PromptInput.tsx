@@ -49,7 +49,8 @@ const PromptInput: React.FC = () => {
     isProcessing,
     setPrompt,
     setTemperature,
-    setTopK
+    setTopK,
+    validateParameters
   } = useSandboxStore();
 
   const [showPresets, setShowPresets] = React.useState(false);
@@ -63,38 +64,27 @@ const PromptInput: React.FC = () => {
   // Debounced prompt validation
   React.useEffect(() => {
     const timeoutId = setTimeout(() => {
-      const trimmedPrompt = prompt.trim();
-      const tokenCount = trimmedPrompt.split(/\s+/).filter(t => t.length > 0).length;
+      const validation = validateParameters();
+      const tokenCount = prompt.trim().split(/\s+/).filter(t => t.length > 0).length;
       
-      if (trimmedPrompt.length === 0) {
+      if (!validation.isValid) {
         setPromptValidation({
           isValid: false,
-          message: 'Please enter a prompt',
+          message: validation.errors[0] || 'Invalid input',
           tokenCount: 0
         });
-      } else if (trimmedPrompt.length > 500) {
-        setPromptValidation({
-          isValid: false,
-          message: 'Prompt too long (max 500 characters)',
-          tokenCount
-        });
-      } else if (tokenCount > 100) {
-        setPromptValidation({
-          isValid: false,
-          message: 'Too many tokens (max 100 for efficiency)',
-          tokenCount
-        });
       } else {
+        const seqLen = Math.min(tokenCount, 512); // Standard transformer limit
         setPromptValidation({
           isValid: true,
-          message: `Ready for processing (${tokenCount} tokens)`,
-          tokenCount
+          message: `Ready: ${tokenCount} tokens → seq_len=${seqLen}`,
+          tokenCount: seqLen
         });
       }
     }, 300); // 300ms debounce for efficiency
 
     return () => clearTimeout(timeoutId);
-  }, [prompt]);
+  }, [prompt, validateParameters]);
 
   return (
     <motion.div
@@ -150,6 +140,11 @@ const PromptInput: React.FC = () => {
             promptValidation.isValid ? 'text-green-600' : 'text-red-600'
           }`}>
             <span>{promptValidation.message}</span>
+            {promptValidation.isValid && promptValidation.tokenCount > 0 && (
+              <span className="text-gray-500">
+                (d=768, max_seq=512)
+              </span>
+            )}
           </div>
           {/* Preset Dropdown */}
           <div className="relative">
@@ -215,8 +210,8 @@ const PromptInput: React.FC = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Temperature: {temperature} 
-              <span className="text-xs text-gray-500 ml-1">(logit scaling)</span>
+              Temperature T = {temperature}
+              <span className="text-xs text-gray-500 ml-1">(softmax scaling)</span>
             </label>
             <input
               type="range"
@@ -229,15 +224,18 @@ const PromptInput: React.FC = () => {
               disabled={isProcessing}
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>Deterministic (T→0)</span>
-              <span>Stochastic (T→∞)</span>
+              <span>Focused (T→0)</span>
+              <span>Creative (T→∞)</span>
+            </div>
+            <div className="text-xs text-gray-400 mt-1 font-mono">
+              p = softmax(z/T)
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Top-K: {topK}
-              <span className="text-xs text-gray-500 ml-1">(nucleus sampling)</span>
+              Top-K = {topK}
+              <span className="text-xs text-gray-500 ml-1">(truncated sampling)</span>
             </label>
             <input
               type="range"
@@ -250,7 +248,10 @@ const PromptInput: React.FC = () => {
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
               <span>Greedy (K=1)</span>
-              <span>Full vocab (K=100)</span>
+              <span>Diverse (K=100)</span>
+            </div>
+            <div className="text-xs text-gray-400 mt-1 font-mono">
+              Keep top K, renormalize
             </div>
           </div>
         </div>
@@ -260,11 +261,14 @@ const PromptInput: React.FC = () => {
           <div className="flex items-start space-x-2">
             <Zap className="h-4 w-4 text-indigo-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-indigo-800">
-              <p className="font-medium mb-1">Mathematical Pipeline:</p>
+              <p className="font-medium mb-1">Transformer Forward Pass:</p>
               <p>
-                <strong>p(w<sub>t+1</sub>|w<sub>1:t</sub>) = softmax(f<sub>θ</sub>(w<sub>1:t</sub>)/T)</strong>
-                <br />
-                Where f<sub>θ</sub> is the transformer, T is temperature, and sampling uses top-K truncation.
+                <span className="font-mono text-xs bg-white/60 px-2 py-1 rounded">
+                  text → tokens → embeddings → attention → FFN → logits → softmax → sample
+                </span>
+              </p>
+              <p className="text-xs mt-1 text-indigo-600">
+                Complexity: O(n²d) attention + O(nd²) FFN per layer × L layers
               </p>
             </div>
           </div>

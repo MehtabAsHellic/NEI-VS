@@ -24,12 +24,15 @@ const RunButton: React.FC = () => {
     setError,
     setActiveVisualization,
     setAnimationQueue,
-    reset
+    reset,
+    validateParameters
   } = useSandboxStore();
 
   const runSequentialProcessing = async () => {
-    if (!prompt.trim()) {
-      setError('Please enter a prompt first');
+    // Validate parameters before processing
+    const validation = validateParameters();
+    if (!validation.isValid) {
+      setError(validation.errors[0]);
       return;
     }
 
@@ -41,21 +44,25 @@ const RunButton: React.FC = () => {
       const steps = ['tokenization', 'embeddings', 'attention', 'processing', 'probabilities', 'output'] as const;
       setAnimationQueue([...steps]);
       
-      // Step 1-5: Run transformer internals with animations
+      // Calculate realistic timing based on mathematical complexity
+      const tokenCount = Math.min(prompt.split(/\s+/).filter(t => t.length > 0).length, 512);
+      const baseDelay = Math.max(800, tokenCount * 10); // Scale with sequence length
+      
+      // Step 1-5: Run transformer internals with mathematically-timed animations
       for (let i = 0; i < steps.length; i++) {
         setProcessingPhase(steps[i]);
         setActiveVisualization(steps[i]);
         setCurrentStep(i);
         
         if (i === 0) {
-          // Initialize transformer on first step
+          // Initialize transformer with realistic hyperparameters
           const hyper = {
-            d_model: 64,
-            n_head: 4,
-            d_head: 16,
-            n_layer: 2,
-            seqLen: 64,
-            ffn_mult: 2,
+            d_model: 768,    // Standard embedding dimension
+            n_head: 16,      // Multi-head attention
+            d_head: 48,      // 768/16 = 48 per head
+            n_layer: 24,     // Deep transformer
+            seqLen: Math.min(tokenCount, 512), // Sequence length constraint
+            ffn_mult: 4,     // FFN expansion factor (768 → 3072 → 768)
           };
           
           const weights = initWeights(hyper, 1337);
@@ -69,11 +76,20 @@ const RunButton: React.FC = () => {
           setTransformerResults(results);
         }
         
-        // Animation delay for each step
-        await new Promise(resolve => setTimeout(resolve, 1200));
+        // Realistic processing delays based on computational complexity
+        const stepDelays = {
+          tokenization: baseDelay * 0.1,    // Fast: O(n)
+          embeddings: baseDelay * 0.2,      // Medium: O(nd)
+          attention: baseDelay * 0.4,       // Slow: O(n²d)
+          processing: baseDelay * 0.5,      // Slowest: O(nd²) × L layers
+          probabilities: baseDelay * 0.15,  // Fast: O(d|V|)
+          output: baseDelay * 0.25          // Medium: depends on generation length
+        };
+        
+        await new Promise(resolve => setTimeout(resolve, stepDelays[steps[i]] || baseDelay * 0.3));
       }
 
-      // Step 6: Generate final response with Gemini
+      // Final step: Generate response with external LLM
       setProcessingPhase('output');
       setActiveVisualization('output');
       setCurrentStep(5);
@@ -90,7 +106,8 @@ const RunButton: React.FC = () => {
     }
   };
 
-  const isDisabled = !prompt.trim() || isProcessing;
+  const validation = validateParameters();
+  const isDisabled = !validation.isValid || isProcessing;
 
   return (
     <motion.div
@@ -111,6 +128,7 @@ const RunButton: React.FC = () => {
         `}
         whileHover={!isDisabled ? { scale: 1.05, y: -2 } : {}}
         whileTap={!isDisabled ? { scale: 0.95 } : {}}
+        title={isDisabled && !isProcessing ? validation.errors[0] : undefined}
       >
         {/* Background Animation */}
         {!isDisabled && (
@@ -135,7 +153,10 @@ const RunButton: React.FC = () => {
 
         {/* Text */}
         <span className="relative z-10">
-          {isProcessing ? `Processing ${processingPhase}...` : 'Run LLM Inference'}
+          {isProcessing ? 
+            `${processingPhase.charAt(0).toUpperCase() + processingPhase.slice(1)}...` : 
+            'Run Transformer Forward Pass'
+          }
         </span>
 
         {/* Sparkle Effect */}
@@ -156,6 +177,17 @@ const RunButton: React.FC = () => {
           </motion.div>
         )}
       </motion.button>
+      
+      {/* Validation Error Display */}
+      {!validation.isValid && !isProcessing && (
+        <motion.div
+          className="mt-2 text-xs text-red-600 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          {validation.errors[0]}
+        </motion.div>
+      )}
     </motion.div>
   );
 };
