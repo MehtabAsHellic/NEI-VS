@@ -1,5 +1,6 @@
 /**
  * Main pipeline visualization component showing LLM processing steps
+ * Implements efficient motion graphics and mathematical visualization
  */
 
 import React from 'react';
@@ -12,7 +13,9 @@ import {
   BarChart3, 
   MessageSquare,
   ArrowRight,
-  Info
+  Info,
+  Zap,
+  Clock
 } from 'lucide-react';
 import { useSandboxStore } from '../../store/useSandboxStore';
 import TokenizationStep from './steps/TokenizationStep';
@@ -26,50 +29,56 @@ const PIPELINE_STEPS = [
   {
     id: 'tokenization',
     title: 'Tokenization',
-    description: 'Breaking text into tokens',
+    description: 'BPE subword tokenization',
     icon: Type,
     color: 'blue',
-    component: TokenizationStep
+    component: TokenizationStep,
+    mathFormula: 'p = w₁w₂...wₙ → t₁t₂...tₘ'
   },
   {
     id: 'embeddings',
     title: 'Embeddings',
-    description: 'Converting to vectors',
+    description: 'E[tᵢ] + PE(i) ∈ ℝᵈ',
     icon: Layers,
     color: 'purple',
-    component: EmbeddingsStep
+    component: EmbeddingsStep,
+    mathFormula: 'eᵢ = E[tᵢ] + PE(i)'
   },
   {
     id: 'attention',
     title: 'Attention',
-    description: 'Finding relationships',
+    description: 'Softmax(QKᵀ/√dₖ)V',
     icon: Eye,
     color: 'green',
-    component: AttentionStep
+    component: AttentionStep,
+    mathFormula: 'Attention(Q,K,V) = softmax(QKᵀ/√dₖ)V'
   },
   {
     id: 'processing',
     title: 'Neural Layers',
-    description: 'Deep processing',
+    description: 'FFN(LayerNorm(x)) + x',
     icon: Cpu,
     color: 'orange',
-    component: ProcessingStep
+    component: ProcessingStep,
+    mathFormula: 'FFN(x) = max(0, xW₁ + b₁)W₂ + b₂'
   },
   {
     id: 'probabilities',
     title: 'Probabilities',
-    description: 'Calculating next tokens',
+    description: 'Softmax(z/T) sampling',
     icon: BarChart3,
     color: 'red',
-    component: ProbabilitiesStep
+    component: ProbabilitiesStep,
+    mathFormula: 'p = softmax(z/T), T = temperature'
   },
   {
     id: 'output',
     title: 'Output',
-    description: 'Generated response',
+    description: 'Autoregressive decoding',
     icon: MessageSquare,
     color: 'indigo',
-    component: OutputStep
+    component: OutputStep,
+    mathFormula: 'p(wₜ₊₁|w₁:ₜ) = ∏p(wᵢ|w₁:ᵢ₋₁)'
   }
 ] as const;
 
@@ -83,9 +92,36 @@ const PipelineVisualization: React.FC = () => {
     showExplanations,
     setShowExplanations,
     response,
-    runFromStep
+    runFromStep,
+    prompt
   } = useSandboxStore();
 
+  const [processingTime, setProcessingTime] = React.useState(0);
+  const [flops, setFlops] = React.useState(0);
+
+  // Track processing metrics
+  React.useEffect(() => {
+    let startTime: number;
+    let interval: NodeJS.Timeout;
+    
+    if (isProcessing) {
+      startTime = Date.now();
+      interval = setInterval(() => {
+        setProcessingTime(Date.now() - startTime);
+      }, 100);
+      
+      // Estimate FLOPs based on prompt length and model size
+      const tokenCount = prompt.split(/\s+/).length;
+      const estimatedFlops = tokenCount * 768 * 24 * 4; // Rough estimate
+      setFlops(estimatedFlops);
+    } else {
+      setProcessingTime(0);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isProcessing, prompt]);
   const activeStepData = PIPELINE_STEPS.find(step => step.id === activeVisualization);
   const ActiveComponent = activeStepData?.component;
 
@@ -108,17 +144,33 @@ const PipelineVisualization: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900">LLM Processing Pipeline</h2>
           
-          <button
+          <div className="flex items-center space-x-4">
+            {/* Performance Metrics */}
+            {isProcessing && (
+              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <div className="flex items-center space-x-1">
+                  <Clock className="h-4 w-4" />
+                  <span>{(processingTime / 1000).toFixed(1)}s</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Zap className="h-4 w-4" />
+                  <span>{(flops / 1e6).toFixed(1)}M FLOPs</span>
+                </div>
+              </div>
+            )}
+            
+            <button
             onClick={() => setShowExplanations(!showExplanations)}
             className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
               showExplanations 
                 ? 'bg-indigo-100 text-indigo-700' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
-          >
-            <Info className="h-4 w-4" />
-            <span className="text-sm">Explanations</span>
-          </button>
+            >
+              <Info className="h-4 w-4" />
+              <span className="text-sm">Explanations</span>
+            </button>
+          </div>
         </div>
 
         {/* Step Navigation */}
@@ -171,6 +223,16 @@ const PipelineVisualization: React.FC = () => {
                   {step.description}
                 </p>
 
+                {/* Mathematical Formula */}
+                {showExplanations && (
+                  <div className={`mt-2 text-xs font-mono ${
+                    isActive || isCompleted || isCurrent
+                      ? `text-${step.color}-700`
+                      : 'text-gray-400'
+                  }`}>
+                    {step.mathFormula}
+                  </div>
+                )}
                 {/* Progress indicator */}
                 {isCurrent && (
                   <motion.div

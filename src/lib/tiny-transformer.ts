@@ -1,5 +1,7 @@
 /**
  * Tiny Transformer implementation for educational purposes
+ * Based on "Attention Is All You Need" (Vaswani et al., 2017)
+ * Implements core mathematical foundations with efficiency optimizations
  */
 
 import { mulberry32, randn } from './prng';
@@ -13,6 +15,8 @@ export interface Hyperparams {
   n_layer: number;
   seqLen: number;
   ffn_mult: number;
+  dropout?: number;
+  eps?: number; // Layer norm epsilon
 }
 
 export interface ForwardArtifacts {
@@ -21,12 +25,28 @@ export interface ForwardArtifacts {
   attnByLayerHead: number[][][][];
   lastLogits: number[];
   embeddings: number[][];
+  positionEncodings: number[][];
+  attentionScores: number[][][][]; // Raw attention scores before softmax
+  ffnActivations: number[][][]; // Feed-forward activations
   qkv?: {Q: number[][][], K: number[][][], V: number[][][]};
   processingSteps: {
     tokenization: { tokens: number[]; tokenStrings: string[]; count: number };
-    embeddings: { vectors: number[][]; similarity: number; dimension: number };
+    embeddings: { 
+      vectors: number[][]; 
+      positional: number[][];
+      similarity: number; 
+      dimension: number;
+      maxSequenceLength: number;
+    };
     attention: { matrices: number[][][][]; focusTokens: string[]; layers: number; heads: number };
-    processing: { activations: number[][][]; layers: number; parameters: string };
+    processing: { 
+      activations: number[][][]; 
+      residualConnections: number[][][];
+      layerNorms: number[][][];
+      layers: number; 
+      parameters: string;
+      flops: number; // Floating point operations count
+    };
     probabilities: { logits: number[]; probs: number[]; topTokens: Array<{token: string; probability: number}> };
   };
 }

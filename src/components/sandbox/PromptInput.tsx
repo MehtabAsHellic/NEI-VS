@@ -1,10 +1,11 @@
 /**
  * Enhanced prompt input component with presets and controls
+ * Implements efficient debouncing and parameter validation
  */
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, Sparkles, ChevronDown, Zap } from 'lucide-react';
+import { Play, Sparkles, ChevronDown, Zap, AlertCircle, CheckCircle } from 'lucide-react';
 import { useSandboxStore } from '../../store/useSandboxStore';
 
 const PROMPT_PRESETS = [
@@ -14,7 +15,8 @@ const PROMPT_PRESETS = [
       'Explain quantum physics in simple terms',
       'How does photosynthesis work?',
       'What causes the seasons to change?',
-      'Describe the water cycle step by step'
+      'Describe the water cycle step by step',
+      'How do neural networks learn patterns?'
     ]
   },
   {
@@ -23,16 +25,18 @@ const PROMPT_PRESETS = [
       'Write a short story about a robot learning to paint',
       'Create a recipe for happiness',
       'Describe a day in the life of a cloud',
-      'Invent a new holiday and explain how to celebrate it'
+      'Invent a new holiday and explain how to celebrate it',
+      'Compose a haiku about artificial intelligence'
     ]
   },
   {
     category: 'Technical',
     prompts: [
-      'How do neural networks learn patterns?',
       'Explain the difference between AI and machine learning',
       'What is the transformer architecture?',
-      'How does natural language processing work?'
+      'How does natural language processing work?',
+      'Describe the attention mechanism in detail',
+      'What are the mathematical foundations of backpropagation?'
     ]
   }
 ];
@@ -50,6 +54,47 @@ const PromptInput: React.FC = () => {
 
   const [showPresets, setShowPresets] = React.useState(false);
   const [selectedCategory, setSelectedCategory] = React.useState(0);
+  const [promptValidation, setPromptValidation] = React.useState<{
+    isValid: boolean;
+    message: string;
+    tokenCount: number;
+  }>({ isValid: true, message: '', tokenCount: 0 });
+
+  // Debounced prompt validation
+  React.useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const trimmedPrompt = prompt.trim();
+      const tokenCount = trimmedPrompt.split(/\s+/).filter(t => t.length > 0).length;
+      
+      if (trimmedPrompt.length === 0) {
+        setPromptValidation({
+          isValid: false,
+          message: 'Please enter a prompt',
+          tokenCount: 0
+        });
+      } else if (trimmedPrompt.length > 500) {
+        setPromptValidation({
+          isValid: false,
+          message: 'Prompt too long (max 500 characters)',
+          tokenCount
+        });
+      } else if (tokenCount > 100) {
+        setPromptValidation({
+          isValid: false,
+          message: 'Too many tokens (max 100 for efficiency)',
+          tokenCount
+        });
+      } else {
+        setPromptValidation({
+          isValid: true,
+          message: `Ready for processing (${tokenCount} tokens)`,
+          tokenCount
+        });
+      }
+    }, 300); // 300ms debounce for efficiency
+
+    return () => clearTimeout(timeoutId);
+  }, [prompt]);
 
   return (
     <motion.div
@@ -79,15 +124,33 @@ const PromptInput: React.FC = () => {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Ask me anything... (e.g., 'Explain how rainbows form' or 'Write a poem about space')"
-              className="w-full h-32 px-4 py-3 border border-gray-200 rounded-xl resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-gray-900 placeholder-gray-500"
+              className={`w-full h-32 px-4 py-3 border rounded-xl resize-none focus:ring-2 focus:border-transparent transition-all text-gray-900 placeholder-gray-500 ${
+                promptValidation.isValid 
+                  ? 'border-gray-200 focus:ring-indigo-500' 
+                  : 'border-red-300 focus:ring-red-500'
+              }`}
               disabled={isProcessing}
+              maxLength={500}
             />
             
-            <div className="absolute bottom-3 right-3 text-xs text-gray-400">
-              {prompt.length}/500
+            <div className="absolute bottom-3 right-3 flex items-center space-x-2">
+              {promptValidation.isValid ? (
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              ) : (
+                <AlertCircle className="h-4 w-4 text-red-500" />
+              )}
+              <span className={`text-xs ${promptValidation.isValid ? 'text-gray-400' : 'text-red-500'}`}>
+                {prompt.length}/500
+              </span>
             </div>
           </div>
 
+          {/* Validation Message */}
+          <div className={`text-xs flex items-center space-x-1 ${
+            promptValidation.isValid ? 'text-green-600' : 'text-red-600'
+          }`}>
+            <span>{promptValidation.message}</span>
+          </div>
           {/* Preset Dropdown */}
           <div className="relative">
             <button
@@ -148,11 +211,12 @@ const PromptInput: React.FC = () => {
           </div>
         </div>
 
-        {/* Controls */}
+        {/* Controls with Mathematical Context */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Temperature: {temperature}
+              Temperature: {temperature} 
+              <span className="text-xs text-gray-500 ml-1">(logit scaling)</span>
             </label>
             <input
               type="range"
@@ -165,14 +229,15 @@ const PromptInput: React.FC = () => {
               disabled={isProcessing}
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>Focused</span>
-              <span>Creative</span>
+              <span>Deterministic (T→0)</span>
+              <span>Stochastic (T→∞)</span>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Top-K: {topK}
+              <span className="text-xs text-gray-500 ml-1">(nucleus sampling)</span>
             </label>
             <input
               type="range"
@@ -184,19 +249,23 @@ const PromptInput: React.FC = () => {
               disabled={isProcessing}
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>Precise</span>
-              <span>Diverse</span>
+              <span>Greedy (K=1)</span>
+              <span>Full vocab (K=100)</span>
             </div>
           </div>
         </div>
 
-        {/* Help Text */}
+        {/* Mathematical Context */}
         <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
           <div className="flex items-start space-x-2">
             <Zap className="h-4 w-4 text-indigo-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-indigo-800">
-              <p className="font-medium mb-1">How it works:</p>
-              <p>Your prompt will be processed through multiple stages: tokenization → embeddings → attention → neural layers → probability calculation → text generation. Watch each step unfold!</p>
+              <p className="font-medium mb-1">Mathematical Pipeline:</p>
+              <p>
+                <strong>p(w<sub>t+1</sub>|w<sub>1:t</sub>) = softmax(f<sub>θ</sub>(w<sub>1:t</sub>)/T)</strong>
+                <br />
+                Where f<sub>θ</sub> is the transformer, T is temperature, and sampling uses top-K truncation.
+              </p>
             </div>
           </div>
         </div>
