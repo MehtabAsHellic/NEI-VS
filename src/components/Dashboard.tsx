@@ -1,76 +1,67 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Brain, 
-  Play, 
-  BookOpen, 
-  BarChart3, 
+  User, 
+  LogOut, 
   Settings, 
-  LogOut,
-  Sparkles,
-  ExternalLink,
-  User,
-  Clock,
-  TrendingUp,
-  Eye,
-  Layers,
-  Target,
+  Play, 
+  Clock, 
+  Calendar,
+  Mail,
   Zap,
-  Activity
+  ArrowRight,
+  Moon,
+  Sun,
+  Key
 } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSandboxStore } from '../store/useSandboxStore';
-import ProtectedLink from './ProtectedLink';
 
 const Dashboard: React.FC = () => {
   const { user, signOut } = useAuthStore();
-  const { prompt, response } = useSandboxStore();
+  const { prompt } = useSandboxStore();
   
-  // Dynamic user statistics based on actual usage
+  const [darkMode, setDarkMode] = React.useState(false);
+  const [notifications, setNotifications] = React.useState(true);
+  const [geminiApiKey, setGeminiApiKey] = React.useState('');
+  
+  // Get user stats from localStorage
   const [userStats, setUserStats] = React.useState({
-    coursesCompleted: 0,
-    sandboxSessions: 0,
-    learningStreak: 1,
-    totalPrompts: 0,
-    favoriteModel: 'LLM Transformer',
-    lastActivity: new Date()
+    joinDate: new Date(),
+    lastLogin: new Date(),
+    recentPrompts: [] as string[]
   });
 
-  // Load user stats from localStorage or initialize
   React.useEffect(() => {
-    const savedStats = localStorage.getItem(`neivs-stats-${user?.email}`);
+    const savedStats = localStorage.getItem(`neivs-user-${user?.email}`);
     if (savedStats) {
-      setUserStats(JSON.parse(savedStats));
+      const parsed = JSON.parse(savedStats);
+      setUserStats({
+        joinDate: new Date(parsed.joinDate || Date.now()),
+        lastLogin: new Date(parsed.lastLogin || Date.now()),
+        recentPrompts: parsed.recentPrompts || []
+      });
     } else {
-      // Initialize with some realistic starting values
+      // Initialize for new user
       const initialStats = {
-        coursesCompleted: Math.floor(Math.random() * 3) + 1, // 1-3 courses
-        sandboxSessions: Math.floor(Math.random() * 8) + 5, // 5-12 sessions
-        learningStreak: Math.floor(Math.random() * 7) + 1, // 1-7 days
-        totalPrompts: Math.floor(Math.random() * 25) + 10, // 10-34 prompts
-        favoriteModel: 'LLM Transformer',
-        lastActivity: new Date()
+        joinDate: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        recentPrompts: []
       };
-      setUserStats(initialStats);
-      localStorage.setItem(`neivs-stats-${user?.email}`, JSON.stringify(initialStats));
+      localStorage.setItem(`neivs-user-${user?.email}`, JSON.stringify(initialStats));
     }
   }, [user?.email]);
 
-  // Update stats when user interacts with sandbox
+  // Update last login on mount
   React.useEffect(() => {
-    if (prompt || response) {
-      setUserStats(prev => {
-        const updated = {
-          ...prev,
-          totalPrompts: prev.totalPrompts + (prompt ? 1 : 0),
-          sandboxSessions: prev.sandboxSessions + (response ? 1 : 0),
-          lastActivity: new Date()
-        };
-        localStorage.setItem(`neivs-stats-${user?.email}`, JSON.stringify(updated));
-        return updated;
-      });
+    if (user?.email) {
+      const stats = {
+        ...userStats,
+        lastLogin: new Date().toISOString()
+      };
+      localStorage.setItem(`neivs-user-${user.email}`, JSON.stringify(stats));
     }
-  }, [prompt, response, user?.email]);
+  }, [user?.email]);
 
   const handleSignOut = async () => {
     try {
@@ -80,104 +71,34 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const quickActions = [
-    {
-      title: 'LLM Sandbox',
-      description: 'Interactive transformer visualization with real-time processing',
-      icon: Brain,
-      color: 'bg-indigo-500',
-      href: '#ai-sandbox',
-      badge: 'Popular',
-      stats: `${userStats.totalPrompts} prompts processed`
-    },
-    {
-      title: 'Learning Tracks',
-      description: 'Structured AI courses with hands-on experiments',
-      icon: BookOpen,
-      color: 'bg-green-500',
-      href: '#learn',
-      badge: 'New',
-      stats: `${userStats.coursesCompleted} courses completed`
-    },
-    {
-      title: 'Model Gallery',
-      description: 'Explore different AI architectures and their visualizations',
-      icon: BarChart3,
-      color: 'bg-purple-500',
-      href: '/models',
-      badge: null,
-      stats: 'CNNs, RNNs, Transformers & more'
-    },
-    {
-      title: 'Advanced Sandbox',
-      description: 'Deep dive into attention mechanisms and neural processing',
-      icon: Target,
-      color: 'bg-orange-500',
-      href: '#ai-sandbox',
-      badge: 'Featured',
-      stats: 'Multi-layer visualization'
-    }
-  ];
+  const handleLaunchSandbox = () => {
+    window.location.href = '/sandbox';
+  };
 
-  const recentActivity = [
-    { 
-      action: 'Explored Attention Mechanisms', 
-      time: '2 hours ago', 
-      type: 'sandbox',
-      icon: Eye,
-      details: 'Analyzed 16-head attention patterns'
-    },
-    { 
-      action: 'Completed LLM Basics Course', 
-      time: '1 day ago', 
-      type: 'course',
-      icon: BookOpen,
-      details: 'Transformer architecture fundamentals'
-    },
-    { 
-      action: 'Processed Custom Prompt', 
-      time: '3 days ago', 
-      type: 'sandbox',
-      icon: Zap,
-      details: '"Explain quantum computing simply"'
-    },
-  ];
-
-  const stats = [
-    { 
-      label: 'Courses Completed', 
-      value: userStats.coursesCompleted.toString(), 
-      change: '+1 this week',
-      icon: BookOpen,
-      color: 'text-green-600'
-    },
-    { 
-      label: 'Sandbox Sessions', 
-      value: userStats.sandboxSessions.toString(), 
-      change: `+${Math.floor(userStats.sandboxSessions * 0.3)} this week`,
-      icon: Activity,
-      color: 'text-blue-600'
-    },
-    { 
-      label: 'Learning Streak', 
-      value: `${userStats.learningStreak} days`, 
-      change: 'Keep it up!',
-      icon: TrendingUp,
-      color: 'text-purple-600'
-    },
-  ];
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <motion.header 
+        className="bg-white border-b border-gray-200"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                <Brain className="h-5 w-5 text-white" />
+                <span className="text-white font-bold text-sm">N</span>
               </div>
-              <h1 className="text-xl font-bold text-gray-900">NEI-VS Dashboard</h1>
+              <span className="text-xl font-semibold text-gray-900">NEI-VS</span>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -197,214 +118,267 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
-      </header>
+      </motion.header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Welcome Section */}
         <motion.div
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.name?.split(' ')[0] || 'Explorer'}! 👋
-          </h2>
-          <p className="text-gray-600">
-            Ready to dive deeper into AI? Your personalized learning journey continues here.
-          </p>
-        </motion.div>
-
-        {/* Stats Grid */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+          className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          {stats.map((stat, index) => (
-            <div key={stat.label} className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                </div>
-                <stat.icon className={`h-8 w-8 ${stat.color}`} />
-              </div>
-              <p className="text-xs text-green-600 mt-2">{stat.change}</p>
-            </div>
-          ))}
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Welcome back, {user?.name?.split(' ')[0] || 'Explorer'}! 👋
+          </h1>
+          <p className="text-xl text-gray-600">
+            Your AI learning journey starts here.
+          </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Quick Actions */}
-          <div className="lg:col-span-2">
+        {/* Two Column Layout */}
+        <div className="grid lg:grid-cols-2 gap-12">
+          {/* Left Column - User Information & Settings */}
+          <div className="space-y-8">
+            {/* User Information Card */}
             <motion.div
-              className="mb-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {quickActions.map((action, index) => (
-                  <ProtectedLink
-                    key={action.title}
-                    href={action.href}
-                    className="group relative bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 block"
+              <div className="flex items-center space-x-3 mb-6">
+                <User className="h-6 w-6 text-indigo-600" />
+                <h2 className="text-xl font-semibold text-gray-900">Profile</h2>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <User className="h-6 w-6 text-indigo-600" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">{user?.name || 'Anonymous User'}</div>
+                    <div className="text-sm text-gray-600 flex items-center space-x-1">
+                      <Mail className="h-4 w-4" />
+                      <span>{user?.email}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center space-x-1 text-gray-600 mb-1">
+                      <Calendar className="h-4 w-4" />
+                      <span className="text-sm">Joined</span>
+                    </div>
+                    <div className="font-medium text-gray-900">
+                      {formatDate(userStats.joinDate)}
+                    </div>
+                  </div>
+                  
+                  <div className="text-center">
+                    <div className="flex items-center justify-center space-x-1 text-gray-600 mb-1">
+                      <Clock className="h-4 w-4" />
+                      <span className="text-sm">Last Login</span>
+                    </div>
+                    <div className="font-medium text-gray-900">
+                      {formatDate(userStats.lastLogin)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Settings Card */}
+            <motion.div
+              className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <div className="flex items-center space-x-3 mb-6">
+                <Settings className="h-6 w-6 text-indigo-600" />
+                <h2 className="text-xl font-semibold text-gray-900">Settings</h2>
+              </div>
+              
+              <div className="space-y-6">
+                {/* Dark Mode Toggle */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    {darkMode ? <Moon className="h-5 w-5 text-gray-600" /> : <Sun className="h-5 w-5 text-gray-600" />}
+                    <span className="text-gray-700">Dark Mode</span>
+                  </div>
+                  <button
+                    onClick={() => setDarkMode(!darkMode)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      darkMode ? 'bg-indigo-600' : 'bg-gray-200'
+                    }`}
                   >
-                    <motion.div
-                      whileHover={{ y: -2, scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
-                    >
-                      {action.badge && (
-                        <div className="absolute top-4 right-4">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            action.badge === 'Popular' ? 'bg-indigo-100 text-indigo-700' :
-                            action.badge === 'New' ? 'bg-green-100 text-green-700' :
-                            action.badge === 'Featured' ? 'bg-orange-100 text-orange-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
-                            {action.badge}
-                          </span>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-start space-x-4">
-                        <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                          <action.icon className="h-6 w-6 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
-                            {action.title}
-                          </h4>
-                          <p className="text-sm text-gray-600 mt-1">{action.description}</p>
-                          <p className="text-xs text-gray-500 mt-2">{action.stats}</p>
-                        </div>
-                        <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-indigo-600 transition-colors" />
-                      </div>
-                    </motion.div>
-                  </ProtectedLink>
-                ))}
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        darkMode ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Notifications Toggle */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Zap className="h-5 w-5 text-gray-600" />
+                    <span className="text-gray-700">Notifications</span>
+                  </div>
+                  <button
+                    onClick={() => setNotifications(!notifications)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      notifications ? 'bg-indigo-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        notifications ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* API Key Input */}
+                <div className="space-y-2">
+                  <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+                    <Key className="h-4 w-4" />
+                    <span>Custom Gemini API Key (Optional)</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={geminiApiKey}
+                    onChange={(e) => setGeminiApiKey(e.target.value)}
+                    placeholder="Enter your Gemini API key..."
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Use your own API key for unlimited requests
+                  </p>
+                </div>
               </div>
             </motion.div>
           </div>
 
-          {/* Recent Activity */}
-          <div className="lg:col-span-1">
+          {/* Right Column - Quick Access */}
+          <div className="space-y-8">
+            {/* Launch Sandbox Card */}
             <motion.div
-              className="bg-white rounded-lg p-6 shadow-sm border border-gray-200"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 border border-indigo-200"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-                <Clock className="h-5 w-5" />
-                <span>Recent Activity</span>
-              </h3>
-              
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <motion.div
-                    key={index}
-                    className="flex items-start space-x-3"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
-                  >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      activity.type === 'course' ? 'bg-green-100' : 'bg-indigo-100'
-                    }`}>
-                      <activity.icon className={`h-4 w-4 ${
-                        activity.type === 'course' ? 'text-green-600' : 'text-indigo-600'
-                      }`} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                      <p className="text-xs text-gray-500">{activity.time}</p>
-                      <p className="text-xs text-gray-600 mt-1">{activity.details}</p>
-                    </div>
-                  </motion.div>
-                ))}
+              <div className="text-center space-y-6">
+                <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto">
+                  <Play className="h-8 w-8 text-white" />
+                </div>
+                
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    LLM Sandbox
+                  </h2>
+                  <p className="text-gray-600">
+                    Explore transformer models with interactive visualizations. 
+                    See how attention, embeddings, and neural layers work in real-time.
+                  </p>
+                </div>
+
+                <motion.button
+                  onClick={handleLaunchSandbox}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Play className="h-5 w-5" />
+                  <span>Launch Sandbox</span>
+                  <ArrowRight className="h-5 w-5" />
+                </motion.button>
+              </div>
+            </motion.div>
+
+            {/* Recent Activity Card */}
+            <motion.div
+              className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <div className="flex items-center space-x-3 mb-6">
+                <Clock className="h-6 w-6 text-indigo-600" />
+                <h2 className="text-xl font-semibold text-gray-900">Recent Activity</h2>
               </div>
               
-              <motion.button
-                className="w-full mt-4 text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                View all activity →
-              </motion.button>
+              {userStats.recentPrompts.length > 0 ? (
+                <div className="space-y-3">
+                  {userStats.recentPrompts.slice(0, 3).map((recentPrompt, index) => (
+                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                      <div className="text-sm text-gray-900 font-medium mb-1">
+                        Prompt Processed
+                      </div>
+                      <div className="text-xs text-gray-600 truncate">
+                        "{recentPrompt}"
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <button
+                    onClick={handleLaunchSandbox}
+                    className="w-full text-indigo-600 hover:text-indigo-700 text-sm font-medium py-2 transition-colors"
+                  >
+                    View all activity →
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Zap className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <p className="text-gray-600 mb-4">
+                    No recent activity yet. Start exploring!
+                  </p>
+                  <button
+                    onClick={handleLaunchSandbox}
+                    className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+                  >
+                    Launch your first session →
+                  </button>
+                </div>
+              )}
             </motion.div>
           </div>
         </div>
 
-        {/* Featured Content - Direct Access to LLM Sandbox */}
-        <motion.div
-          className="mt-8 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-6 border border-indigo-200"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
+        {/* Footer */}
+        <motion.footer
+          className="mt-16 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Sparkles className="h-6 w-6 text-indigo-600" />
-              <div>
-                <h3 className="text-lg font-semibold text-indigo-900">
-                  Ready to Explore? Jump into the LLM Sandbox
-                </h3>
-                <p className="text-indigo-700">
-                  Experience real-time transformer processing with interactive visualizations. 
-                  See how attention mechanisms work step-by-step.
-                </p>
-              </div>
-            </div>
-            <ProtectedLink
-              href="#ai-sandbox"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 whitespace-nowrap"
+          <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
+            <button
+              onClick={handleLaunchSandbox}
+              className="hover:text-gray-700 transition-colors"
             >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center space-x-2"
-              >
-                <Play className="h-4 w-4" />
-                <span>Launch Sandbox</span>
-              </motion.div>
-            </ProtectedLink>
+              Sandbox
+            </button>
+            <a href="/docs" className="hover:text-gray-700 transition-colors">
+              Docs
+            </a>
+            <button
+              onClick={handleSignOut}
+              className="hover:text-gray-700 transition-colors"
+            >
+              Sign Out
+            </button>
           </div>
-          
-          {/* Quick Preview of Sandbox Features */}
-          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <Eye className="h-4 w-4 text-blue-600" />
-              </div>
-              <div className="text-xs text-indigo-700">Attention Heatmaps</div>
-            </div>
-            <div className="text-center">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <Layers className="h-4 w-4 text-purple-600" />
-              </div>
-              <div className="text-xs text-indigo-700">Embedding Projections</div>
-            </div>
-            <div className="text-center">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <BarChart3 className="h-4 w-4 text-green-600" />
-              </div>
-              <div className="text-xs text-indigo-700">Token Probabilities</div>
-            </div>
-            <div className="text-center">
-              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <Zap className="h-4 w-4 text-orange-600" />
-              </div>
-              <div className="text-xs text-indigo-700">Real-time Processing</div>
-            </div>
-          </div>
-        </motion.div>
+        </motion.footer>
       </div>
     </div>
   );

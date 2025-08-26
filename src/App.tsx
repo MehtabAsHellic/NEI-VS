@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuthStore } from './store/useAuthStore';
 import LandingPage from './components/LandingPage';
 import Dashboard from './components/Dashboard';
+import Sandbox from './components/Sandbox';
 import Navigation from './components/Navigation';
 import Hero from './components/Hero';
 import WhyNEIVS from './components/WhyNEIVS';
@@ -12,7 +13,7 @@ import { Loader } from 'lucide-react';
 
 function App() {
   const { isAuthenticated, isLoading, isInitialized, checkAuth } = useAuthStore();
-  const [currentView, setCurrentView] = React.useState<'landing' | 'dashboard' | 'main'>('landing');
+  const [currentView, setCurrentView] = React.useState<'landing' | 'dashboard' | 'sandbox' | 'main'>('landing');
 
   React.useEffect(() => {
     // Initialize auth check if not already done
@@ -27,6 +28,16 @@ function App() {
       const currentPath = window.location.pathname;
       const currentHash = window.location.hash;
       
+      // Handle sandbox routing
+      if (currentPath === '/sandbox') {
+        if (isAuthenticated) {
+          setCurrentView('sandbox');
+        } else {
+          window.location.href = '/';
+        }
+        return;
+      }
+      
       // Clean up any OAuth redirect artifacts
       if (currentPath === '/dashboard' || currentHash === '#dashboard') {
         window.history.replaceState(null, '', '/');
@@ -40,6 +51,8 @@ function App() {
         // For authenticated users, check what they're trying to access
         if (currentHash === '#dashboard' || currentPath === '/dashboard') {
           setCurrentView('dashboard');
+        } else if (currentPath === '/sandbox') {
+          setCurrentView('sandbox');
         } else if (currentHash && currentHash !== '#dashboard') {
           // Allow access to main app sections
           setCurrentView('main');
@@ -60,6 +73,16 @@ function App() {
       if (!isInitialized || isLoading) return;
       
       const hash = window.location.hash;
+      const path = window.location.pathname;
+      
+      if (path === '/sandbox') {
+        if (isAuthenticated) {
+          setCurrentView('sandbox');
+        } else {
+          window.location.href = '/';
+        }
+        return;
+      }
       
       if (hash === '#dashboard') {
         if (isAuthenticated) {
@@ -81,6 +104,8 @@ function App() {
     };
 
     window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleHashChange);
+      window.removeEventListener('popstate', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, [isAuthenticated, isInitialized, isLoading]);
 
@@ -100,6 +125,14 @@ function App() {
     return (
       <ProtectedRoute>
         <Dashboard />
+      </ProtectedRoute>
+    );
+  }
+
+  if (currentView === 'sandbox') {
+    return (
+      <ProtectedRoute>
+        <Sandbox />
       </ProtectedRoute>
     );
   }

@@ -5,6 +5,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/sandbox",
+      "destination": "/index.html"
+    },
+    {
       "source": "/models",
       "destination": "/index.html"
     },
