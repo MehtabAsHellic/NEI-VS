@@ -255,7 +255,7 @@ const PipelineVisualization: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Step Navigation */}

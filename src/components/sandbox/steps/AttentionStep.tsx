@@ -269,7 +269,7 @@ const AttentionStep: React.FC = () => {
                   Entropy: {normalizedAttention[selectedToken] ? 
                     (-normalizedAttention[selectedToken].reduce((sum, p) => p > 0 ? sum + p * Math.log2(p) : sum, 0)).toFixed(2) : 0} bits
                 </div>
-                }
+                {'}'}
               </div>
             </motion.div>
           )}
