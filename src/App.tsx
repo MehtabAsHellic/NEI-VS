@@ -87,14 +87,7 @@ function App() {
   // Show loading screen during initialization
   if (!isInitialized || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Loader className="h-8 w-8 animate-spin mx-auto mb-4 text-indigo-600" />
-          <p className="text-gray-600">
-            Initializing NEI-VS Platform...
-          </p>
-        </div>
-      </div>
+      <LandingPage />
     );
   }
 

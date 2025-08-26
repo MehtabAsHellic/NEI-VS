@@ -1,17 +1,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, Sparkles, ArrowRight, Zap } from 'lucide-react';
+import { Play, ArrowRight, Zap } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 
 const LandingHero: React.FC = () => {
   const { signInWithGoogle, isLoading } = useAuthStore();
-  const [animatedTokens, setAnimatedTokens] = React.useState<number[]>([]);
+  const [tokenFlow, setTokenFlow] = React.useState<number[]>([]);
 
   React.useEffect(() => {
     const interval = setInterval(() => {
-      setAnimatedTokens(prev => {
-        const newTokens = Array.from({ length: 6 }, () => Math.floor(Math.random() * 20));
-        return newTokens;
+      setTokenFlow(prev => {
+        const newFlow = Array.from({ length: 8 }, (_, i) => i);
+        return newFlow;
       });
     }, 2000);
 
@@ -20,64 +20,51 @@ const LandingHero: React.FC = () => {
 
   const handleSignIn = async () => {
     try {
-      console.log('Starting Google Sign-In...');
       await signInWithGoogle();
     } catch (error) {
       console.error('Sign in failed:', error);
-      // Show user-friendly error message
-      alert('Sign in failed. Please try again.');
     }
   };
 
+  const tokens = ['The', 'quick', 'brown', 'fox', 'jumps', 'over', 'the', 'lazy'];
+
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-hidden">
-      {/* Background Animation */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
-        <div className="absolute top-20 right-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
+    <section className="relative min-h-screen bg-white overflow-hidden">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl"></div>
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
-        <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
+        <div className="grid lg:grid-cols-2 gap-16 items-center min-h-[80vh]">
           {/* Left Column - Content */}
           <motion.div
             className="space-y-8"
-            initial={{ opacity: 0, x: -50 }}
+            initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="space-y-6">
-              <motion.div
-                className="inline-flex items-center space-x-2 bg-indigo-100 text-indigo-800 px-4 py-2 rounded-full text-sm font-medium"
+              <motion.h1
+                className="text-5xl lg:text-6xl font-semibold text-slate-900 leading-tight tracking-tight"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
+                transition={{ delay: 0.2, duration: 0.8 }}
               >
-                <Sparkles className="h-4 w-4" />
-                <span>Powered by Google Gemini AI</span>
-              </motion.div>
-
-              <motion.h1
-                className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.8 }}
-              >
-                Discover AI with{' '}
-                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  NEI-VS Sandbox
+                Learn AI by{' '}
+                <span className="text-indigo-600">
+                  Doing
                 </span>
               </motion.h1>
 
               <motion.p
-                className="text-xl text-gray-600 leading-relaxed max-w-2xl"
+                className="text-xl text-slate-600 leading-relaxed max-w-lg"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
               >
-                Sign in with Google to explore how Large Language Models work through interactive visualizations. 
-                Access your personal dashboard and dive deep into AI mechanics.
+                Explore LLMs with our interactive Sandbox—powered by Gemini.
               </motion.p>
             </div>
 
@@ -85,12 +72,12 @@ const LandingHero: React.FC = () => {
               className="flex flex-col sm:flex-row gap-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
             >
               <motion.button
                 onClick={handleSignIn}
                 disabled={isLoading}
-                className="group relative bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl disabled:opacity-50"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -113,143 +100,101 @@ const LandingHero: React.FC = () => {
                       <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
                     <span>Sign In with Google</span>
-                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </motion.button>
 
-              <motion.div
-                className="flex items-center space-x-2 text-sm text-gray-600"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
+              <motion.button
+                className="border-2 border-slate-200 hover:border-slate-300 text-slate-700 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-2"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>No Credit Card Required</span>
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              className="grid grid-cols-3 gap-8 pt-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-            >
-              <div className="text-center">
-                <div className="text-3xl font-bold text-indigo-600 mb-1">6+</div>
-                <div className="text-sm text-gray-600 font-medium">AI Models</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-purple-600 mb-1">Live</div>
-                <div className="text-sm text-gray-600 font-medium">Visualizations</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600 mb-1">Free</div>
-                <div className="text-sm text-gray-600 font-medium">Access</div>
-              </div>
+                <Play className="h-5 w-5" />
+                <span>Watch Demo</span>
+              </motion.button>
             </motion.div>
           </motion.div>
 
-          {/* Right Column - Interactive Preview */}
+          {/* Right Column - AI Pipeline Visualization */}
           <motion.div
-            className="relative lg:pl-8"
-            initial={{ opacity: 0, x: 50 }}
+            className="relative"
+            initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100 transform hover:scale-105 transition-transform duration-300">
+            <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 p-8">
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">LLM Pipeline Preview</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">AI Pipeline</h3>
                   <div className="flex space-x-2">
-                    <div className="w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>
-                    <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+                    <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                    <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
                   </div>
                 </div>
 
-                {/* Pipeline Steps */}
+                {/* Token Flow Visualization */}
                 <div className="space-y-4">
-                  {[
-                    { step: 'Tokenization', color: 'blue', icon: '🔤' },
-                    { step: 'Embeddings', color: 'purple', icon: '🧠' },
-                    { step: 'Attention', color: 'green', icon: '👁️' },
-                    { step: 'Generation', color: 'orange', icon: '✨' }
-                  ].map((item, index) => (
-                    <motion.div
-                      key={item.step}
-                      className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.8 + index * 0.1 }}
-                    >
-                      <div className="text-2xl">{item.icon}</div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">{item.step}</div>
-                        <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                  <div className="text-sm text-slate-600">Input: "The quick brown fox..."</div>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {tokens.map((token, index) => (
+                      <motion.div
+                        key={index}
+                        className="px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ 
+                          opacity: tokenFlow.includes(index) ? 1 : 0.6,
+                          scale: tokenFlow.includes(index) ? 1.05 : 1,
+                          x: tokenFlow.includes(index) ? [0, 5, 0] : 0
+                        }}
+                        transition={{ 
+                          duration: 0.5,
+                          delay: index * 0.1
+                        }}
+                      >
+                        {token}
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Pipeline Steps */}
+                  <div className="space-y-3 pt-4">
+                    {[
+                      { step: 'Tokenization', progress: 100, color: 'bg-blue-500' },
+                      { step: 'Embeddings', progress: 85, color: 'bg-purple-500' },
+                      { step: 'Attention', progress: 70, color: 'bg-green-500' },
+                      { step: 'Generation', progress: 45, color: 'bg-orange-500' }
+                    ].map((item, index) => (
+                      <motion.div
+                        key={item.step}
+                        className="space-y-2"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.8 + index * 0.1 }}
+                      >
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-700 font-medium">{item.step}</span>
+                          <span className="text-slate-500">{item.progress}%</span>
+                        </div>
+                        <div className="w-full bg-slate-200 rounded-full h-2">
                           <motion.div
-                            className={`bg-${item.color}-500 h-2 rounded-full`}
+                            className={`${item.color} h-2 rounded-full`}
                             initial={{ width: 0 }}
-                            animate={{ width: `${60 + Math.random() * 40}%` }}
+                            animate={{ width: `${item.progress}%` }}
                             transition={{ delay: 1 + index * 0.2, duration: 1 }}
                           />
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* Token Flow Visualization */}
-                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4">
-                  <div className="text-sm font-medium text-gray-700 mb-2">Token Flow:</div>
-                  <div className="flex flex-wrap gap-1">
-                    {['The', 'quick', 'brown', 'fox', 'jumps', 'over'].map((token, index) => (
-                      <motion.span
-                        key={index}
-                        className={`px-2 py-1 text-xs rounded font-mono ${
-                          animatedTokens.includes(index) 
-                            ? 'bg-indigo-600 text-white' 
-                            : 'bg-white text-gray-700'
-                        }`}
-                        animate={{
-                          scale: animatedTokens.includes(index) ? 1.1 : 1,
-                          backgroundColor: animatedTokens.includes(index) ? '#4f46e5' : '#ffffff'
-                        }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        {token}
-                      </motion.span>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Floating elements */}
-            <div className="absolute -top-4 -right-4 w-8 h-8 bg-indigo-400 rounded-full opacity-20 animate-bounce"></div>
-            <div className="absolute -bottom-6 -left-6 w-12 h-12 bg-purple-400 rounded-full opacity-15 animate-pulse"></div>
           </motion.div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
-    </div>
+    </section>
   );
 };
 
